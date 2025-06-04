@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="./tehillim-data.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
         
@@ -15,6 +16,7 @@
             background-color: #f8fafc;
             margin: 0;
             padding: 20px;
+            line-height: 1.8;
         }
         
         .container {
@@ -173,6 +175,29 @@
             text-align: center;
         }
         
+        .tehillim-text {
+            background: #fefefe;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            text-align: right;
+            font-size: 18px;
+            line-height: 2.2;
+            max-height: 500px;
+            overflow-y: auto;
+            direction: rtl;
+        }
+        
+        .tehillim-chapter-title {
+            color: #1e40af;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 8px;
+        }
+        
         .controls {
             display: flex;
             gap: 12px;
@@ -255,13 +280,20 @@
         };
 
         const getParticipantAssignment = (participantId, todayInfo) => {
-            const assignmentDay = participantId;
+            const assignmentDay = todayInfo.cycleDay;
             const chapters = tehillimDivision[assignmentDay] || [];
             return { participantId, assignmentDay, chapters, todayInfo };
         };
 
+        const getChaptersText = (chapters) => {
+            // הקוד יקרא מהקובץ הנפרד tehillim-data.js
+            if (typeof window.tehillimText === 'undefined') {
+                return "טוען את הטקסט...";
+            }
+            return chapters.map(chapter => window.tehillimText[chapter]).filter(Boolean).join('\n\n');
+        };
+
         const loadParticipants = () => {
-            // קריאה מ-localStorage (כמו שdata-manager שומר)
             const savedData = localStorage.getItem('tehillimParticipants');
             if (savedData) {
                 try {
@@ -273,8 +305,6 @@
                     console.error('Error parsing saved data:', e);
                 }
             }
-            
-            // אם אין נתונים - החזר רשימה ריקה
             return [];
         };
 
@@ -296,8 +326,8 @@
 
 🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨
 
-✅ לאישור שקראת: ${appUrl}?participant=${participant.id}
-📱 לצפייה בהתקדמות: ${appUrl}
+✅ לאישור שקראת ולצפייה בהתקדמות:
+${appUrl}?participant=${participant.id}
 
 תודה שאתה חלק מהמעגל הקדוש! 🕯️`;
 
@@ -352,7 +382,6 @@
                 }));
             };
 
-            // אם אין משתתפים
             if (participants.length === 0) {
                 return (
                     <div className="container">
@@ -379,16 +408,16 @@
             
             for (const [participantId, isRead] of Object.entries(readingStatus)) {
                 if (isRead) {
-                    const chapters = tehillimDivision[parseInt(participantId)] || [];
+                    const chapters = tehillimDivision[todayInfo.cycleDay] || [];
                     completedChapters += chapters.length;
                 }
             }
 
-            // תצוגת משתתף (מצומצמת)
             if (isParticipantView) {
                 const assignment = getParticipantAssignment(currentParticipantId, todayInfo);
                 const isCompleted = readingStatus[currentParticipantId] || false;
                 const participant = participants.find(p => p.id === currentParticipantId);
+                const chaptersText = getChaptersText(assignment.chapters);
 
                 return (
                     <div className="container">
@@ -408,6 +437,17 @@
                                     פרקים {assignment.chapters.join('-')}
                                 </h2>
                             </div>
+
+                            {chaptersText && chaptersText !== "טוען את הטקסט..." && (
+                                <div className="tehillim-text">
+                                    <div className="tehillim-chapter-title">
+                                        📖 הטקסט המלא לקריאה
+                                    </div>
+                                    <div style={{ whiteSpace: 'pre-line' }}>
+                                        {chaptersText}
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ textAlign: 'center', margin: '32px 0' }}>
                                 <button
@@ -446,23 +486,12 @@
                                         ></div>
                                     </div>
                                 </div>
-
-                                <div>
-                                    <h4>התקדמות בספר: {completedChapters}/{totalChapters} פרקים</h4>
-                                    <div className="progress-bar">
-                                        <div 
-                                            className="progress-fill" 
-                                            style={{ width: `${(completedChapters / totalChapters) * 100}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // תצוגת מנהל (עיצוב ישן)
             return (
                 <div className="container">
                     <h1 className="app-title">🕯️ קריאת תהילים קבוצתית - ניהול 🕯️</h1>
@@ -503,21 +532,14 @@
                                     ></div>
                                 </div>
                             </div>
-
-                            <div>
-                                <h4>פרקים שנקראו: {completedChapters}/{totalChapters}</h4>
-                                <div className="progress-bar">
-                                    <div 
-                                        className="progress-fill" 
-                                        style={{ width: `${(completedChapters / totalChapters) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     <div className="card">
                         <h3>👥 רשימת משתתפים ({participants.length})</h3>
+                        <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+                            🗓️ היום כולם קוראים: פרקים {tehillimDivision[todayInfo.cycleDay]?.join('-')}
+                        </p>
                         {participants.map((participant) => {
                             const assignment = getParticipantAssignment(participant.id, todayInfo);
                             const isCompleted = readingStatus[participant.id] || false;
@@ -527,7 +549,7 @@
                                     <div className="participant-info">
                                         <div className="participant-name">{participant.name}</div>
                                         <div className="participant-chapters">
-                                            פרקים: {assignment.chapters.join('-')} | טלפון: {participant.phone}
+                                            טלפון: {participant.phone}
                                         </div>
                                     </div>
                                     
