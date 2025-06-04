@@ -81,6 +81,11 @@
             padding: 8px 16px;
         }
         
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        
         .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -174,6 +179,16 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
+        
+        .no-data-warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            color: #92400e;
+        }
     </style>
 </head>
 <body>
@@ -246,24 +261,21 @@
         };
 
         const loadParticipants = () => {
+            // קריאה מ-localStorage (כמו שdata-manager שומר)
             const savedData = localStorage.getItem('tehillimParticipants');
             if (savedData) {
                 try {
-                    return JSON.parse(savedData);
+                    const parsed = JSON.parse(savedData);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed;
+                    }
                 } catch (e) {
                     console.error('Error parsing saved data:', e);
                 }
             }
             
-            const defaultParticipants = [];
-            for (let i = 1; i <= 30; i++) {
-                defaultParticipants.push({
-                    id: i,
-                    name: `משתתף ${i}`,
-                    phone: `+972-50-000-${i.toString().padStart(4, '0')}`
-                });
-            }
-            return defaultParticipants;
+            // אם אין נתונים - החזר רשימה ריקה
+            return [];
         };
 
         const getAppUrl = () => {
@@ -304,7 +316,8 @@
             const currentParticipantId = isParticipantView ? parseInt(participantId) : null;
 
             useEffect(() => {
-                setParticipants(loadParticipants());
+                const loadedParticipants = loadParticipants();
+                setParticipants(loadedParticipants);
                 
                 const savedStatus = localStorage.getItem(`reading-status-${todayInfo.cycleDay}`);
                 if (savedStatus) {
@@ -338,6 +351,27 @@
                     [participantId]: !prev[participantId]
                 }));
             };
+
+            // אם אין משתתפים
+            if (participants.length === 0) {
+                return (
+                    <div className="container">
+                        <h1 className="app-title">🕯️ קריאת תהילים קבוצתית 🕯️</h1>
+                        
+                        <div className="no-data-warning">
+                            <h2>⚠️ לא נטענו נתוני משתתפים</h2>
+                            <p>כדי להתחיל, יש צורך לטעון נתוני משתתפים תחילה.</p>
+                            <a 
+                                href="./data-manager.html"
+                                className="btn btn-primary"
+                                style={{ fontSize: '18px', padding: '16px 32px', marginTop: '16px' }}
+                            >
+                                🔧 נהל נתוני משתתפים
+                            </a>
+                        </div>
+                    </div>
+                );
+            }
 
             const completedCount = Object.values(readingStatus).filter(Boolean).length;
             const totalChapters = Object.values(tehillimDivision).flat().length;
@@ -404,11 +438,11 @@
                                 <h3>📊 התקדמות כללית</h3>
                                 
                                 <div style={{ marginBottom: '20px' }}>
-                                    <h4>משתתפים שסיימו: {completedCount}/30</h4>
+                                    <h4>משתתפים שסיימו: {completedCount}/{participants.length}</h4>
                                     <div className="progress-bar">
                                         <div 
                                             className="progress-fill" 
-                                            style={{ width: `${(completedCount / 30) * 100}%` }}
+                                            style={{ width: `${(completedCount / participants.length) * 100}%` }}
                                         ></div>
                                     </div>
                                 </div>
@@ -447,6 +481,12 @@
                             >
                                 🔄 איפוס מחזור ליום 1
                             </button>
+                            <a 
+                                href="./data-manager.html"
+                                className="btn btn-secondary"
+                            >
+                                🔧 נהל נתוני משתתפים
+                            </a>
                         </div>
                     </div>
 
@@ -455,11 +495,11 @@
                             <h3>📊 התקדמות היום</h3>
                             
                             <div style={{ marginBottom: '20px' }}>
-                                <h4>משתתפים שסיימו: {completedCount}/30</h4>
+                                <h4>משתתפים שסיימו: {completedCount}/{participants.length}</h4>
                                 <div className="progress-bar">
                                     <div 
                                         className="progress-fill" 
-                                        style={{ width: `${(completedCount / 30) * 100}%` }}
+                                        style={{ width: `${(completedCount / participants.length) * 100}%` }}
                                     ></div>
                                 </div>
                             </div>
@@ -477,7 +517,7 @@
                     </div>
 
                     <div className="card">
-                        <h3>👥 רשימת משתתפים</h3>
+                        <h3>👥 רשימת משתתפים ({participants.length})</h3>
                         {participants.map((participant) => {
                             const assignment = getParticipantAssignment(participant.id, todayInfo);
                             const isCompleted = readingStatus[participant.id] || false;
@@ -487,7 +527,7 @@
                                     <div className="participant-info">
                                         <div className="participant-name">{participant.name}</div>
                                         <div className="participant-chapters">
-                                            פרקים: {assignment.chapters.join('-')}
+                                            פרקים: {assignment.chapters.join('-')} | טלפון: {participant.phone}
                                         </div>
                                     </div>
                                     
