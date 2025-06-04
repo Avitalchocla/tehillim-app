@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 ניהול נתונים - קריאת תהילים קבוצתית 🔧</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin: 16px auto;
+            max-width: 1200px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Heebo', sans-serif;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .input {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Heebo', sans-serif;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .textarea {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Heebo', sans-serif;
+            width: 100%;
+            height: 300px;
+            resize: vertical;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .table th, .table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .table tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .app-title {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid #fecaca;
+        }
+        
+        .info-box {
+            background: #f0f9ff;
+            color: #1e40af;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <h1 class="app-title" style="font-size: 48px; font-weight: bold;">
+            🔧 ניהול נתונים - קריאת תהילים קבוצתית 🔧
+        </h1>
+
+        <div class="card">
+            <h2 style="font-size: 32px; font-weight: bold; margin-bottom: 24px; text-align: center;">
+                הכנסת נתוני משתתפים במהירות
+            </h2>
+
+            <!-- הוראות שימוש -->
+            <div class="info-box">
+                <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px;">
+                    📋 איך זה עובד:
+                </h3>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <span class="step-number">1</span>
+                    <span>הדבק את רשימת מספרי הטלפון (ללא קידומת) - כל מספר בשורה נפרדת</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <span class="step-number">2</span>
+                    <span>המערכת תוסיף אוטומטית קידומת ישראל (+972) ושמות (משתתף 1, משתתף 2...)</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <span class="step-number">3</span>
+                    <span>בדוק את הטבלה ותקן שמות אם צריך</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="step-number">4</span>
+                    <span>לחץ "שמור לאפליקציה" והנתונים יועברו לאפליקציה הראשית</span>
+                </div>
+            </div>
+
+            <!-- הכנסת מספרי טלפון -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
+                <div>
+                    <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">
+                        📱 הדבק מספרי טלפון
+                    </h3>
+                    <p style="color: #6b7280; margin-bottom: 16px;">
+                        הדבק מספרי טלפון ללא קידומת, כל מספר בשורה נפרדת.
+                        <br><strong>דוגמה:</strong> 0501234567
+                    </p>
+                    <textarea 
+                        id="phoneNumbers" 
+                        class="textarea" 
+                        placeholder="0501234567
+0527654321
+0533456789
+0544567890
+...הוסף עד 30 מספרים"
+                    ></textarea>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button onclick="processPhones()" class="btn btn-primary" style="flex: 1;">
+                            🔄 עבד נתונים
+                        </button>
+                        <button onclick="clearAll()" class="btn btn-danger">
+                            🗑️ נקה הכל
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">
+                        ✨ תוצאה מעובדת
+                    </h3>
+                    <div id="processedCount" style="color: #6b7280; margin-bottom: 16px;">
+                        עדיין לא עובדו נתונים
+                    </div>
+                    <div id="phonePreview" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; height: 300px; overflow-y: auto; font-family: monospace;">
+                        הנתונים המעובדים יופיעו כאן...
+                    </div>
+                </div>
+            </div>
+
+            <!-- הודעות -->
+            <div id="messages"></div>
+
+            <!-- טבלת משתתפים -->
+            <div id="participantsSection" style="display: none;">
+                <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">
+                    👥 טבלת משתתפים מעודכנת
+                </h3>
+                <p style="color: #6b7280; margin-bottom: 16px;">
+                    <strong>הערה:</strong> אתה כמנהל תראה שמות אמיתיים. המשתתפים יראו רק "משתתף 1", "משתתף 2" וכו'.
+                </p>
+                
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">#</th>
+                                <th>שם המשתתף</th>
+                                <th>מספר טלפון</th>
+                                <th>תצוגה למשתתפים</th>
+                                <th style="width: 120px;">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center;">
+                    <button onclick="saveToApp()" class="btn btn-success" style="font-size: 20px; padding: 16px 32px;">
+                        💾 שמור לאפליקציה (30 משתתפים)
+                    </button>
+                    <button onclick="openApp()" class="btn btn-primary" style="font-size: 20px; padding: 16px 32px;">
+                        🚀 פתח אפליקציה
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let participants = [];
+
+        function processPhones() {
+            const phoneText = document.getElementById('phoneNumbers').value.trim();
+            
+            if (!phoneText) {
+                showMessage('אנא הכנס מספרי טלפון', 'error');
+                return;
+            }
+
+            const phoneLines = phoneText.split('\n').filter(line => line.trim());
+            
+            if (phoneLines.length === 0) {
+                showMessage('לא נמצאו מספרי טלפון תקינים', 'error');
+                return;
+            }
+
+            if (phoneLines.length > 30) {
+                showMessage('ניתן להכניס עד 30 משתתפים בלבד', 'error');
+                return;
+            }
+
+            participants = [];
+            let preview = '';
+
+            phoneLines.forEach((phone, index) => {
+                const cleanPhone = phone.trim().replace(/\D/g, ''); // הסרת כל מה שלא ספרה
+                
+                if (cleanPhone.length < 9 || cleanPhone.length > 10) {
+                    showMessage(`מספר טלפון לא תקין בשורה ${index + 1}: ${phone}`, 'error');
+                    return;
+                }
+
+                // הוספת קידומת ישראל
+                let formattedPhone;
+                if (cleanPhone.startsWith('0')) {
+                    // הסרת 0 והוספת +972
+                    formattedPhone = '+972-' + cleanPhone.substring(1, 3) + '-' + cleanPhone.substring(3);
+                } else if (cleanPhone.length === 9) {
+                    // הוספת +972 ישירות
+                    formattedPhone = '+972-' + cleanPhone.substring(0, 2) + '-' + cleanPhone.substring(2);
+                } else {
+                    formattedPhone = cleanPhone;
+                }
+
+                const participant = {
+                    id: index + 1,
+                    name: `משתתף ${index + 1}`,
+                    phone: formattedPhone,
+                    originalPhone: phone.trim()
+                };
+
+                participants.push(participant);
+                preview += `${participant.id}. ${participant.name} - ${participant.phone}\n`;
+            });
+
+            // עדכון תצוגה
+            document.getElementById('processedCount').textContent = `עובדו ${participants.length} מספרי טלפון`;
+            document.getElementById('phonePreview').textContent = preview;
+            
+            updateParticipantsTable();
+            document.getElementById('participantsSection').style.display = 'block';
+            
+            showMessage(`✅ עובדו בהצלחה ${participants.length} מספרי טלפון עם קידומת ישראל!`, 'success');
+        }
+
+        function updateParticipantsTable() {
+            const tbody = document.getElementById('participantsTable');
+            tbody.innerHTML = '';
+
+            participants.forEach(participant => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: bold;">${participant.id}</td>
+                    <td>
+                        <input type="text" 
+                               value="${participant.name}" 
+                               onchange="updateParticipantName(${participant.id}, this.value)"
+                               class="input" 
+                               style="margin: 0; padding: 8px;">
+                    </td>
+                    <td style="font-family: monospace; direction: ltr; text-align: left;">${participant.phone}</td>
+                    <td style="color: #6b7280;">משתתף ${participant.id}</td>
+                    <td>
+                        <button onclick="removeParticipant(${participant.id})" 
+                                class="btn btn-danger" 
+                                style="padding: 6px 12px; font-size: 14px;">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateParticipantName(id, newName) {
+            const participant = participants.find(p => p.id === id);
+            if (participant) {
+                participant.name = newName;
+            }
+        }
+
+        function removeParticipant(id) {
+            if (confirm('האם אתה בטוח שברצונך למחוק משתתף זה?')) {
+                participants = participants.filter(p => p.id !== id);
+                // עדכון מספרי ID
+                participants.forEach((p, index) => {
+                    p.id = index + 1;
+                });
+                updateParticipantsTable();
+                showMessage('המשתתף נמחק בהצלחה', 'success');
+            }
+        }
+
+        function clearAll() {
+            if (confirm('האם אתה בטוח שברצונך לנקות את כל הנתונים?')) {
+                document.getElementById('phoneNumbers').value = '';
+                document.getElementById('phonePreview').textContent = 'הנתונים המעובדים יופיעו כאן...';
+                document.getElementById('processedCount').textContent = 'עדיין לא עובדו נתונים';
+                document.getElementById('participantsSection').style.display = 'none';
+                participants = [];
+                clearMessages();
+                showMessage('כל הנתונים נוקו בהצלחה', 'success');
+            }
+        }
+
+        function saveToApp() {
+            if (participants.length === 0) {
+                showMessage('אין נתונים לשמירה. אנא עבד תחילה מספרי טלפון.', 'error');
+                return;
+            }
+
+            // שמירת הנתונים ב-localStorage
+            localStorage.setItem('tehillimParticipants', JSON.stringify(participants));
+            localStorage.setItem('tehillimDataSaved', 'true');
+            
+            showMessage(`🎉 הנתונים נשמרו בהצלחה! ${participants.length} משתתפים מוכנים לשימוש באפליקציה.`, 'success');
+        }
+
+        function openApp() {
+            if (!localStorage.getItem('tehillimDataSaved')) {
+                showMessage('אנא שמור תחילה את הנתונים לפני פתיחת האפליקציה', 'error');
+                return;
+            }
+            
+            // פתיחת האפליקציה החדשה (צריך להיות קובץ נפרד)
+            alert('💡 כעת פתח את קובץ האפליקציה הראשית (tehillim-app-final.html) כדי לראות את הנתונים החדשים!');
+        }
+
+        function showMessage(text, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = messageClass;
+            messageDiv.textContent = text;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            // הסרת ההודעה אחרי 5 שניות
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        // טעינת נתונים קיימים אם יש
+        window.onload = function() {
+            const savedData = localStorage.getItem('tehillimParticipants');
+            if (savedData) {
+                participants = JSON.parse(savedData);
+                if (participants.length > 0) {
+                    updateParticipantsTable();
+                    document.getElementById('participantsSection').style.display = 'block';
+                    document.getElementById('processedCount').textContent = `נטענו ${participants.length} משתתפים קיימים`;
+                    
+                    // הצגת הטלפונים בתיבת הטקסט
+                    const phoneText = participants.map(p => p.originalPhone || p.phone.replace('+972-', '0').replace(/-/g, '')).join('\n');
+                    document.getElementById('phoneNumbers').value = phoneText;
+                }
+            }
+        };
+    </script>
+</body>
+</html>
