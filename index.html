@@ -3,187 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕯️ קריאת תהילים קבוצתית - מחזור אוטומטי 🕯️</title>
+    <title>🕯️ קריאת תהילים קבוצתית 🕯️</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Heebo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #f8fafc;
             margin: 0;
+            padding: 20px;
         }
         
-        .progress-circle {
-            transform: rotate(-90deg);
-        }
-        
-        .progress-circle-bg {
-            fill: none;
-            stroke: #e2e8f0;
-            stroke-width: 8;
-        }
-        
-        .progress-circle-fill {
-            fill: none;
-            stroke-linecap: round;
-            stroke-width: 8;
-            transition: stroke-dasharray 0.5s ease-in-out;
-        }
-        
-        .daily-circle {
-            stroke: #3b82f6;
-        }
-        
-        .monthly-circle {
-            stroke: #10b981;
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
         }
         
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 24px;
-            margin: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .app-title {
+            text-align: center;
+            color: #1e40af;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .date-info {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
         
         .btn {
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 10px 20px;
             border: none;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
             font-family: 'Heebo', sans-serif;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #3b82f6;
             color: white;
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background-color: #10b981;
             color: white;
         }
         
         .btn-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background-color: #f59e0b;
             color: white;
+        }
+        
+        .btn-whatsapp {
+            background-color: #25d366;
+            color: white;
+            font-size: 14px;
+            padding: 8px 16px;
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
-        .input {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-family: 'Heebo', sans-serif;
-            width: 100%;
-            margin-bottom: 12px;
-        }
-        
-        .input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .participant-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 16px;
-            margin: 8px 0;
+        .participant-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .participant-row:last-child {
+            border-bottom: none;
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .participant-chapters {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
         }
         
         .status-completed {
-            background: #dcfce7;
-            color: #166534;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            background-color: #d1fae5;
+            color: #065f46;
         }
         
         .status-pending {
-            background: #fef2f2;
+            background-color: #fee2e2;
             color: #991b1b;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+        }
+        
+        .progress-section {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1e40af);
+            transition: width 0.3s ease;
+        }
+        
+        .simple-view {
+            background: #f0f9ff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
         }
         
         .chapter-display {
-            background: #f0f9ff;
-            border: 2px solid #0ea5e9;
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
             border-radius: 12px;
             padding: 20px;
-            margin: 16px 0;
+            margin: 20px 0;
             text-align: center;
         }
         
-        .app-title {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .date-info {
-            background: linear-gradient(135deg, #e0f2fe 0%, #0284c7 100%);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            color: white;
-            text-align: center;
-        }
-        
-        .cycle-info {
-            background: linear-gradient(135deg, #f0fdf4 0%, #16a34a 100%);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            color: white;
-            text-align: center;
-        }
-        
-        .whatsapp-message {
-            background: #f0fdf4;
-            border: 2px solid #22c55e;
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            font-family: monospace;
-            white-space: pre-line;
-            direction: ltr;
-            text-align: left;
-        }
-        
-        .data-source-info {
-            background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            color: #92400e;
-            text-align: center;
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -193,7 +182,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // נתוני חלוקת התהילים לפי ימים
         const tehillimDivision = {
             1: ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'],
             2: ['י', 'יא', 'יב', 'יג', 'יד', 'טו', 'טז', 'יז'],
@@ -227,55 +215,36 @@
             30: ['תהילה לדוד']
         };
 
-        // פונקציות עזר לחישוב תאריכים
         const getTodayInfo = () => {
             const today = new Date();
             const dayOfMonth = today.getDate();
-            const month = today.getMonth() + 1;
-            const year = today.getFullYear();
             
-            // בדיקה אם יש דריסה של מחזור
             const cycleOverride = localStorage.getItem('cycleOverride');
-            let cycleDay, completedCycles;
+            let cycleDay;
             
             if (cycleOverride) {
                 const override = JSON.parse(cycleOverride);
                 const originalDate = new Date(override.originalDate);
                 const currentDate = new Date();
                 const daysDiff = Math.floor((currentDate - originalDate) / (1000 * 60 * 60 * 24));
-                
                 cycleDay = ((override.overrideCycleDay - 1 + daysDiff) % 30) + 1;
-                completedCycles = Math.floor((override.overrideCycleDay - 1 + daysDiff) / 30);
             } else {
-                // חישוב יום במחזור רגיל (1-30)
                 cycleDay = ((dayOfMonth - 1) % 30) + 1;
-                completedCycles = Math.floor((dayOfMonth - 1) / 30);
             }
             
             return {
                 dayOfMonth,
-                month,
-                year,
                 cycleDay,
-                completedCycles,
                 hebrewDate: today.toLocaleDateString('he-IL')
             };
         };
 
         const getParticipantAssignment = (participantId, todayInfo) => {
-            // כל משתתף מקבל חלק קבוע בהתאם למספר שלו
             const assignmentDay = participantId;
             const chapters = tehillimDivision[assignmentDay] || [];
-            
-            return {
-                participantId,
-                assignmentDay,
-                chapters,
-                todayInfo
-            };
+            return { participantId, assignmentDay, chapters, todayInfo };
         };
 
-        // פונקציה לטעינת נתוני משתתפים
         const loadParticipants = () => {
             const savedData = localStorage.getItem('tehillimParticipants');
             if (savedData) {
@@ -286,7 +255,6 @@
                 }
             }
             
-            // נתונים דוגמה אם אין נתונים שמורים
             const defaultParticipants = [];
             for (let i = 1; i <= 30; i++) {
                 defaultParticipants.push({
@@ -298,13 +266,8 @@
             return defaultParticipants;
         };
 
-        // פונקציות WhatsApp
-        const encodeWhatsAppMessage = (message) => {
-            return encodeURIComponent(message);
-        };
-
         const getAppUrl = () => {
-            return window.location.href;
+            return window.location.origin + window.location.pathname;
         };
 
         const createWhatsAppLink = (participant, todayInfo) => {
@@ -321,571 +284,244 @@
 
 🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨
 
-✅ לאישור שקראת: ${appUrl}
+✅ לאישור שקראת: ${appUrl}?participant=${participant.id}
 📱 לצפייה בהתקדמות: ${appUrl}
 
 תודה שאתה חלק מהמעגל הקדוש! 🕯️`;
 
-            // הסרת קידומת ומינוס
             const cleanPhone = participant.phone.replace('+972-', '972').replace(/-/g, '');
-            
-            return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeWhatsAppMessage(message)}`;
+            return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
         };
 
-        const createGroupWhatsAppLink = (todayInfo) => {
-            const appUrl = getAppUrl();
-            
-            const message = `🕯️ קריאת תהילים קבוצתית - יום ${todayInfo.cycleDay} במחזור
-
-📅 היום ${todayInfo.hebrewDate}
-
-🤝 בואו נשלים יחד את כל התהילים! כל אחד יקרא את החלק שלו.
-
-📱 לצפייה בהתקדמות ולאישור קריאה: ${appUrl}
-
-📖 בברכת גמר התהילים! ✨`;
-
-            return `https://api.whatsapp.com/send?text=${encodeWhatsAppMessage(message)}`;
-        };
-
-        // רכיב עיגול התקדמות
-        const ProgressCircle = ({ progress, total, label, color, size = 200 }) => {
-            const radius = (size - 20) / 2;
-            const circumference = radius * 2 * Math.PI;
-            const strokeDasharray = circumference;
-            const strokeDashoffset = circumference - (progress / total) * circumference;
-            
-            return (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px' }}>
-                    <div style={{ position: 'relative' }}>
-                        <svg width={size} height={size} className="progress-circle">
-                            <circle
-                                cx={size/2}
-                                cy={size/2}
-                                r={radius}
-                                className="progress-circle-bg"
-                            />
-                            <circle
-                                cx={size/2}
-                                cy={size/2}
-                                r={radius}
-                                className={`progress-circle-fill ${color}`}
-                                style={{
-                                    strokeDasharray,
-                                    strokeDashoffset
-                                }}
-                            />
-                        </svg>
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>
-                                    {progress}/{total}
-                                </div>
-                                <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                    {Math.round((progress / total) * 100)}%
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style={{ marginTop: '16px', textAlign: 'center', fontWeight: '600', color: '#374151' }}>
-                        {label}
-                    </div>
-                </div>
-            );
-        };
-
-        // רכיב ממשק משתתף
-        const ParticipantView = ({ participantId, onSwitchToAdmin }) => {
+        const TehillimApp = () => {
+            const [readingStatus, setReadingStatus] = useState({});
             const [todayInfo, setTodayInfo] = useState(getTodayInfo());
             const [participants, setParticipants] = useState([]);
-            const [dailyCompletions, setDailyCompletions] = useState({});
-            const [myCompletion, setMyCompletion] = useState(false);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const participantId = urlParams.get('participant');
+            const isParticipantView = participantId !== null;
+            const currentParticipantId = isParticipantView ? parseInt(participantId) : null;
 
             useEffect(() => {
-                // עדכון תאריך כל דקה
-                const interval = setInterval(() => {
-                    setTodayInfo(getTodayInfo());
-                }, 60000);
-
-                // טעינת נתוני משתתפים
-                const loadedParticipants = loadParticipants();
-                setParticipants(loadedParticipants);
-
-                // טעינת השלמות מהיום
-                const today = new Date().toDateString();
-                const savedCompletions = localStorage.getItem(`completions_${today}`);
-                if (savedCompletions) {
-                    const completions = JSON.parse(savedCompletions);
-                    setDailyCompletions(completions);
-                    setMyCompletion(completions[participantId] || false);
-                }
-
-                return () => clearInterval(interval);
-            }, [participantId]);
-
-            const toggleMyCompletion = () => {
-                const newStatus = !myCompletion;
-                setMyCompletion(newStatus);
+                setParticipants(loadParticipants());
                 
-                const newCompletions = {
-                    ...dailyCompletions,
-                    [participantId]: newStatus
-                };
-                setDailyCompletions(newCompletions);
-                
-                // שמירה ליום הנוכחי
-                const today = new Date().toDateString();
-                localStorage.setItem(`completions_${today}`, JSON.stringify(newCompletions));
-            };
-
-            // מציאת המשתתף הנוכחי
-            const currentParticipant = participants.find(p => p.id === participantId) || 
-                                    { id: participantId, name: `משתתף ${participantId}`, phone: '' };
-            
-            const assignment = getParticipantAssignment(participantId, todayInfo);
-            
-            // חישוב התקדמות
-            const completedToday = Object.keys(dailyCompletions).filter(id => dailyCompletions[id]).length;
-            const totalChapters = 150;
-            const completedChapters = Object.keys(dailyCompletions).filter(id => dailyCompletions[id]).reduce((sum, id) => {
-                const assignment = getParticipantAssignment(parseInt(id), todayInfo);
-                return sum + assignment.chapters.length;
-            }, 0);
-
-            return (
-                <div style={{ minHeight: '100vh', padding: '24px' }}>
-                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                        <h1 className="app-title" style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '32px' }}>
-                            🕯️ קריאת תהילים קבוצתית 🕯️
-                        </h1>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
-                            <button 
-                                onClick={onSwitchToAdmin}
-                                className="btn btn-primary"
-                            >
-                                👨‍💼 מעבר ללוח מנהל
-                            </button>
-                        </div>
-
-                        {/* מידע על התאריך והמחזור */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                            <div className="date-info">
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
-                                    📅 מידע יומי
-                                </h3>
-                                <div>היום: {todayInfo.hebrewDate}</div>
-                                <div>יום במחזור: {todayInfo.cycleDay}/30</div>
-                                <div>אתה: משתתף {participantId}</div>
-                            </div>
-                            
-                            <div className="cycle-info">
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
-                                    📖 החלק שלך היום
-                                </h3>
-                                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                                    פרקים: {assignment.chapters.join('-')}
-                                </div>
-                                <div>
-                                    {assignment.chapters.length} פרקים להיום
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* אישור קריאה */}
-                        <div className="card">
-                            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', textAlign: 'center' }}>
-                                אישור קריאת התהילים שלך
-                            </h2>
-                            <div className="chapter-display">
-                                <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '12px' }}>
-                                    פרקים {assignment.chapters.join('-')}
-                                </div>
-                                <div style={{ fontSize: '16px', color: '#6b7280', marginBottom: '20px' }}>
-                                    {assignment.chapters.length} פרקים ליום {todayInfo.cycleDay} במחזור
-                                </div>
-                                <button 
-                                    onClick={toggleMyCompletion}
-                                    className={`btn ${myCompletion ? 'btn-success' : 'btn-primary'}`}
-                                    style={{ fontSize: '20px', padding: '16px 32px' }}
-                                >
-                                    {myCompletion ? '✅ קראתי!' : '📖 לחץ אחרי שקראת'}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* התקדמות הקבוצה */}
-                        <div className="card">
-                            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', textAlign: 'center' }}>
-                                התקדמות הקבוצה יום {todayInfo.cycleDay}
-                            </h2>
-                            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <ProgressCircle 
-                                    progress={completedChapters}
-                                    total={totalChapters}
-                                    label="פרקים שנקראו היום"
-                                    color="daily-circle"
-                                    size={180}
-                                />
-                                <ProgressCircle 
-                                    progress={completedToday}
-                                    total={participants.length}
-                                    label="משתתפים שקראו"
-                                    color="monthly-circle"
-                                    size={180}
-                                />
-                            </div>
-                        </div>
-
-                        {/* רשימת משתתפים (אנונימית) */}
-                        <div className="card">
-                            <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>
-                                התקדמות משתתפים יום {todayInfo.cycleDay}
-                            </h2>
-                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                {participants.map(participant => {
-                                    const assignment = getParticipantAssignment(participant.id, todayInfo);
-                                    const hasCompleted = dailyCompletions[participant.id] || false;
-                                    
-                                    return (
-                                        <div key={participant.id} className="participant-card">
-                                            <div>
-                                                <div style={{ fontWeight: '600' }}>
-                                                    משתתף {participant.id}
-                                                    {participant.id === participantId && ' (אתה)'}
-                                                </div>
-                                                <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                                    פרקים: {assignment.chapters.join('-')}
-                                                </div>
-                                            </div>
-                                            <div className={hasCompleted ? 'status-completed' : 'status-pending'}>
-                                                {hasCompleted ? '✅ קרא' : '⏳ לא קרא'}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // רכיב ממשק מנהל
-        const AdminDashboard = ({ onSwitchToParticipant }) => {
-            const [participants, setParticipants] = useState([]);
-            const [todayInfo, setTodayInfo] = useState(getTodayInfo());
-            const [dailyCompletions, setDailyCompletions] = useState({});
-
-            useEffect(() => {
-                // עדכון תאריך כל דקה
-                const interval = setInterval(() => {
-                    setTodayInfo(getTodayInfo());
-                }, 60000);
-
-                // טעינת נתוני משתתפים
-                const loadedParticipants = loadParticipants();
-                setParticipants(loadedParticipants);
-
-                // טעינת השלמות מהיום
-                const today = new Date().toDateString();
-                const savedCompletions = localStorage.getItem(`completions_${today}`);
-                if (savedCompletions) {
-                    setDailyCompletions(JSON.parse(savedCompletions));
+                const savedStatus = localStorage.getItem(`reading-status-${todayInfo.cycleDay}`);
+                if (savedStatus) {
+                    try {
+                        setReadingStatus(JSON.parse(savedStatus));
+                    } catch (e) {
+                        console.error('Error loading reading status:', e);
+                    }
                 }
-
-                return () => clearInterval(interval);
             }, []);
 
-            const toggleCompletion = (participantId) => {
-                const newCompletions = {
-                    ...dailyCompletions,
-                    [participantId]: !dailyCompletions[participantId]
-                };
-                setDailyCompletions(newCompletions);
-                
-                // שמירה ליום הנוכחי
-                const today = new Date().toDateString();
-                localStorage.setItem(`completions_${today}`, JSON.stringify(newCompletions));
-            };
-
-            const resetDailyData = () => {
-                if (confirm('⚠️ האם אתה בטוח שברצונך לאפס את נתוני היום?\n\nכל הקריאות של היום יאופסו.')) {
-                    setDailyCompletions({});
-                    const today = new Date().toDateString();
-                    localStorage.removeItem(`completions_${today}`);
-                    alert('🔄 נתוני היום אופסו בהצלחה!');
-                }
-            };
-
             const resetCycle = () => {
-                if (confirm('⚠️ האם אתה בטוח שברצונך לאפס את המחזור לתחילה?\n\n• המחזור יתחיל מיום 1\n• כל הנתונים היומיים יאופסו\n• התאריך האמיתי יישאר אותו דבר')) {
-                    // איפוס נתוני השלמות
-                    setDailyCompletions({});
-                    
-                    // איפוס המחזור לתחילה
-                    const newTodayInfo = {
-                        ...todayInfo,
-                        cycleDay: 1,
-                        completedCycles: 0
-                    };
-                    setTodayInfo(newTodayInfo);
-                    
-                    // שמירת האיפוס
-                    localStorage.setItem('cycleOverride', JSON.stringify({
-                        originalDate: new Date().toDateString(),
-                        overrideCycleDay: 1
-                    }));
-                    
-                    // מחיקת נתוני השלמות מכל הימים
-                    const today = new Date().toDateString();
-                    localStorage.removeItem(`completions_${today}`);
-                    
-                    alert('🔄 המחזור אופס לתחילה!\n\nעכשיו המערכת מציגה יום 1 במחזור.');
+                const today = new Date();
+                const override = {
+                    originalDate: today.toISOString(),
+                    overrideCycleDay: 1
+                };
+                localStorage.setItem('cycleOverride', JSON.stringify(override));
+                setTodayInfo(getTodayInfo());
+                setReadingStatus({});
+                localStorage.removeItem(`reading-status-${todayInfo.cycleDay}`);
+            };
+
+            useEffect(() => {
+                localStorage.setItem(`reading-status-${todayInfo.cycleDay}`, JSON.stringify(readingStatus));
+            }, [readingStatus, todayInfo.cycleDay]);
+
+            const toggleReadingStatus = (participantId) => {
+                setReadingStatus(prev => ({
+                    ...prev,
+                    [participantId]: !prev[participantId]
+                }));
+            };
+
+            const completedCount = Object.values(readingStatus).filter(Boolean).length;
+            const totalChapters = Object.values(tehillimDivision).flat().length;
+            let completedChapters = 0;
+            
+            for (const [participantId, isRead] of Object.entries(readingStatus)) {
+                if (isRead) {
+                    const chapters = tehillimDivision[parseInt(participantId)] || [];
+                    completedChapters += chapters.length;
                 }
-            };
+            }
 
-            const openDataManager = () => {
-                alert('💡 פתח את קובץ data-manager.html כדי לנהל את רשימת המשתתפים ומספרי הטלפון.');
-            };
+            // תצוגת משתתף (מצומצמת)
+            if (isParticipantView) {
+                const assignment = getParticipantAssignment(currentParticipantId, todayInfo);
+                const isCompleted = readingStatus[currentParticipantId] || false;
+                const participant = participants.find(p => p.id === currentParticipantId);
 
-            // חישוב התקדמות
-            const completedToday = Object.keys(dailyCompletions).filter(id => dailyCompletions[id]).length;
-            const totalChapters = 150;
-            const completedChapters = Object.keys(dailyCompletions).filter(id => dailyCompletions[id]).reduce((sum, id) => {
-                const assignment = getParticipantAssignment(parseInt(id), todayInfo);
-                return sum + assignment.chapters.length;
-            }, 0);
-
-            const dataSource = participants.length > 0 && participants[0].name !== `משתתף 1` ? 'מדף ניהול הנתונים' : 'נתוני דוגמה';
-
-            return (
-                <div style={{ minHeight: '100vh', padding: '24px' }}>
-                    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                        <h1 className="app-title" style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '32px' }}>
-                            🕯️ לוח מנהל - קריאת תהילים קבוצתית 🕯️
-                        </h1>
+                return (
+                    <div className="container">
+                        <h1 className="app-title">🕯️ קריאת תהילים קבוצתית 🕯️</h1>
                         
-                        {/* מידע על מקור הנתונים */}
-                        <div className="data-source-info">
-                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                                📊 מקור הנתונים: {dataSource}
-                            </h3>
-                            {dataSource === 'נתוני דוגמה' && (
-                                <p style={{ margin: 0 }}>
-                                    לשימוש עם נתונים אמיתיים, השתמש בדף ניהול הנתונים להכנסת שמות וטלפונים
-                                </p>
+                        <div className="date-info">
+                            <h3>📅 {todayInfo.hebrewDate}</h3>
+                            <p>יום {todayInfo.cycleDay} במחזור התהילים</p>
+                        </div>
+
+                        <div className="card">
+                            <h2>👤 משתתף {currentParticipantId}</h2>
+                            
+                            <div className="chapter-display">
+                                <h3>📜 החלק שלך להיום:</h3>
+                                <h2 style={{ color: '#3b82f6', margin: '16px 0' }}>
+                                    פרקים {assignment.chapters.join('-')}
+                                </h2>
+                            </div>
+
+                            <div style={{ textAlign: 'center', margin: '32px 0' }}>
+                                <button
+                                    className={`btn ${isCompleted ? 'btn-success' : 'btn-primary'}`}
+                                    onClick={() => toggleReadingStatus(currentParticipantId)}
+                                    style={{ padding: '16px 32px', fontSize: '18px' }}
+                                >
+                                    {isCompleted ? '✅ קראתי!' : '📖 לחץ אחרי שקראת'}
+                                </button>
+                            </div>
+
+                            {isCompleted && (
+                                <div style={{ 
+                                    background: '#d1fae5', 
+                                    color: '#065f46', 
+                                    padding: '16px', 
+                                    borderRadius: '12px',
+                                    textAlign: 'center',
+                                    marginTop: '16px'
+                                }}>
+                                    🎉 כל הכבוד! קראת את החלק שלך היום!
+                                </div>
                             )}
                         </div>
-                        
-                        {/* מידע על התאריך והמחזור */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                            <div className="date-info">
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
-                                    📅 מידע יומי
-                                </h3>
-                                <div>היום: {todayInfo.hebrewDate}</div>
-                                <div>יום במחזור: {todayInfo.cycleDay}/30</div>
-                                <div>מחזורים שהושלמו החודש: {todayInfo.completedCycles}</div>
-                            </div>
-                            
-                            <div className="cycle-info">
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
-                                    🔄 מצב המחזור
-                                </h3>
-                                <div>המערכת מתעדכנת אוטומטית!</div>
-                                <div>כל יום = חלוקה חדשה</div>
-                                <div>רק שלח תזכורת יומית 📱</div>
-                            </div>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
-                            <button 
-                                onClick={() => onSwitchToParticipant(1)}
-                                className="btn btn-primary"
-                            >
-                                👤 מעבר לתצוגת משתתף
-                            </button>
-                            
-                            <button 
-                                onClick={openDataManager}
-                                className="btn btn-warning"
-                            >
-                                🔧 ניהול נתונים
-                            </button>
-                            
-                            <button 
-                                onClick={resetDailyData}
-                                className="btn btn-danger"
-                            >
-                                🔄 איפוס יום
-                            </button>
 
-                            <button 
-                                onClick={resetCycle}
-                                className="btn btn-danger"
-                                style={{ backgroundColor: '#dc2626' }}
-                            >
-                                🔄 איפוס מחזור לתחילה
-                            </button>
-                        </div>
-
-                        {/* התקדמות היום */}
                         <div className="card">
-                            <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center' }}>
-                                התקדמות יום {todayInfo.cycleDay} במחזור
-                            </h2>
-                            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <ProgressCircle 
-                                    progress={completedChapters}
-                                    total={totalChapters}
-                                    label="פרקים שנקראו היום בקבוצה"
-                                    color="daily-circle"
-                                    size={200}
-                                />
-                                <ProgressCircle 
-                                    progress={completedToday}
-                                    total={participants.length}
-                                    label="משתתפים שקראו היום"
-                                    color="monthly-circle"
-                                    size={200}
-                                />
-                            </div>
-                        </div>
-
-                        {/* שליחת הודעות */}
-                        <div className="card">
-                            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-                                שליחת תזכורת יומית
-                            </h2>
-                            <p style={{ marginBottom: '16px', color: '#6b7280' }}>
-                                המערכת תכין הודעה אישית לכל משתתף עם השם האמיתי שלו והחלק שלו ליום {todayInfo.cycleDay} במחזור
-                            </p>
-                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                <button 
-                                    onClick={() => alert(`🎉 כפתורים אישיים זמינים ליד כל משתתף!\n\nלחץ על "📱 שלח וואטסאפ" ליד המשתתף שתרצה לשלוח לו הודעה.`)}
-                                    className="btn btn-success"
-                                    style={{ flex: '1', fontSize: '18px' }}
-                                >
-                                    📱 הכן הודעות אישיות יום {todayInfo.cycleDay}
-                                </button>
-                                <button 
-                                    onClick={() => window.open(createGroupWhatsAppLink(todayInfo), '_blank')}
-                                    className="btn btn-primary"
-                                    style={{ fontSize: '18px' }}
-                                >
-                                    📱 שלח הודעה לקבוצה יום {todayInfo.cycleDay}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
-                            {/* רשימת משתתפים */}
-                            <div className="card">
-                                <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-                                    רשימת משתתפים ({participants.length})
-                                </h2>
+                            <div className="simple-view">
+                                <h3>📊 התקדמות כללית</h3>
                                 
-                                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                    {participants.map(participant => {
-                                        const assignment = getParticipantAssignment(participant.id, todayInfo);
-                                        return (
-                                            <div key={participant.id} className="participant-card">
-                                                <div>
-                                                    <div style={{ fontWeight: '600', fontSize: '16px' }}>{participant.name}</div>
-                                                    <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                                        {participant.phone} | פרקים: {assignment.chapters.join('-')}
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => window.open(createWhatsAppLink(participant, todayInfo), '_blank')}
-                                                    className="btn btn-success"
-                                                    style={{ padding: '8px 12px', fontSize: '14px' }}
-                                                >
-                                                    📱 שלח וואטסאפ
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <h4>משתתפים שסיימו: {completedCount}/30</h4>
+                                    <div className="progress-bar">
+                                        <div 
+                                            className="progress-fill" 
+                                            style={{ width: `${(completedCount / 30) * 100}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* התקדמות יומית מפורטת */}
-                            <div className="card">
-                                <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-                                    התקדמות יום {todayInfo.cycleDay} (לחץ לעדכון)
-                                </h2>
-                                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                    {participants.map(participant => {
-                                        const assignment = getParticipantAssignment(participant.id, todayInfo);
-                                        const hasCompleted = dailyCompletions[participant.id] || false;
-                                        
-                                        return (
-                                            <div 
-                                                key={participant.id} 
-                                                className="participant-card"
-                                                style={{ cursor: 'pointer' }}
-                                                onClick={() => toggleCompletion(participant.id)}
-                                            >
-                                                <div>
-                                                    <div style={{ fontWeight: '600' }}>{participant.name}</div>
-                                                    <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                                        פרקים: {assignment.chapters.join('-')}
-                                                    </div>
-                                                </div>
-                                                <div className={hasCompleted ? 'status-completed' : 'status-pending'}>
-                                                    {hasCompleted ? '✅ קרא' : '⏳ לא קרא'}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                <div>
+                                    <h4>התקדמות בספר: {completedChapters}/{totalChapters} פרקים</h4>
+                                    <div className="progress-bar">
+                                        <div 
+                                            className="progress-fill" 
+                                            style={{ width: `${(completedChapters / totalChapters) * 100}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                );
+            }
+
+            // תצוגת מנהל (עיצוב ישן)
+            return (
+                <div className="container">
+                    <h1 className="app-title">🕯️ קריאת תהילים קבוצתית - ניהול 🕯️</h1>
+                    
+                    <div className="date-info">
+                        <h3>📅 {todayInfo.hebrewDate}</h3>
+                        <p>יום {todayInfo.cycleDay} במחזור התהילים</p>
+                    </div>
+
+                    <div className="card">
+                        <h3>🎛️ פעולות ניהול</h3>
+                        <div className="controls">
+                            <button 
+                                className="btn btn-warning"
+                                onClick={resetCycle}
+                            >
+                                🔄 איפוס מחזור ליום 1
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="progress-section">
+                            <h3>📊 התקדמות היום</h3>
+                            
+                            <div style={{ marginBottom: '20px' }}>
+                                <h4>משתתפים שסיימו: {completedCount}/30</h4>
+                                <div className="progress-bar">
+                                    <div 
+                                        className="progress-fill" 
+                                        style={{ width: `${(completedCount / 30) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4>פרקים שנקראו: {completedChapters}/{totalChapters}</h4>
+                                <div className="progress-bar">
+                                    <div 
+                                        className="progress-fill" 
+                                        style={{ width: `${(completedChapters / totalChapters) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h3>👥 רשימת משתתפים</h3>
+                        {participants.map((participant) => {
+                            const assignment = getParticipantAssignment(participant.id, todayInfo);
+                            const isCompleted = readingStatus[participant.id] || false;
+                            
+                            return (
+                                <div key={participant.id} className="participant-row">
+                                    <div className="participant-info">
+                                        <div className="participant-name">{participant.name}</div>
+                                        <div className="participant-chapters">
+                                            פרקים: {assignment.chapters.join('-')}
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span className={`status-badge ${isCompleted ? 'status-completed' : 'status-pending'}`}>
+                                            {isCompleted ? '✅ קרא' : '⏳ ממתין'}
+                                        </span>
+                                        
+                                        <button
+                                            className={`btn ${isCompleted ? 'btn-success' : 'btn-primary'}`}
+                                            onClick={() => toggleReadingStatus(participant.id)}
+                                            style={{ fontSize: '12px' }}
+                                        >
+                                            {isCompleted ? '↩️ בטל' : '✅ סמן כקרא'}
+                                        </button>
+                                        
+                                        <a
+                                            href={createWhatsAppLink(participant, todayInfo)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-whatsapp"
+                                        >
+                                            📱 WhatsApp
+                                        </a>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             );
         };
 
-        // רכיב ראשי
-        const App = () => {
-            const [currentView, setCurrentView] = useState('admin');
-            const [participantId, setParticipantId] = useState(1);
-
-            const switchToAdmin = () => {
-                setCurrentView('admin');
-            };
-
-            const switchToParticipant = (id) => {
-                setParticipantId(id);
-                setCurrentView('participant');
-            };
-
-            return (
-                <div>
-                    {currentView === 'admin' ? (
-                        <AdminDashboard onSwitchToParticipant={switchToParticipant} />
-                    ) : (
-                        <ParticipantView 
-                            participantId={participantId} 
-                            onSwitchToAdmin={switchToAdmin} 
-                        />
-                    )}
-                </div>
-            );
-        };
-
-        // רינדור האפליקציה
-        ReactDOM.render(<App />, document.getElementById('root'));
+        ReactDOM.render(<TehillimApp />, document.getElementById('root'));
     </script>
 </body>
 </html>
