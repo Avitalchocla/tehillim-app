@@ -3,587 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕯️ קריאת תהילים קבוצתית 🕯️</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="./tehillim-data.js"></script>
+    <title>תהילים קבוצתי - מחזור 30 יום</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
-        
         body {
-            font-family: 'Heebo', sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
         }
-        
-        .container {
-            max-width: 1000px;
+        .main-container {
+            max-width: 800px;
             margin: 0 auto;
-        }
-        
-        .card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-        
-        .app-title {
-            text-align: center;
-            color: #1e40af;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-        
-        .date-info {
-            background: linear-gradient(135deg, #3b82f6, #1e40af);
-            color: white;
-            text-align: center;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Heebo', sans-serif;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .btn-success {
-            background-color: #10b981;
-            color: white;
-        }
-        
-        .btn-warning {
-            background-color: #f59e0b;
-            color: white;
-        }
-        
-        .btn-whatsapp {
-            background-color: #25d366;
-            color: white;
-            font-size: 14px;
-            padding: 8px 16px;
-        }
-        
-        .btn-secondary {
-            background-color: #6b7280;
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        .participant-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .participant-row:last-child {
-            border-bottom: none;
-        }
-        
-        .participant-info {
-            flex: 1;
-        }
-        
-        .participant-name {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .participant-chapters {
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        
-        .status-completed {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-pending {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .progress-section {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #e5e7eb;
-            border-radius: 10px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             overflow: hidden;
-            margin: 10px 0;
         }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #1e40af);
-            transition: width 0.3s ease;
-        }
-        
-        .simple-view {
-            background: #f0f9ff;
-            border-radius: 12px;
-            padding: 20px;
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
             text-align: center;
         }
-        
-        .chapter-display {
-            background: #eff6ff;
-            border: 2px solid #3b82f6;
-            border-radius: 12px;
+        .content {
+            padding: 30px;
+        }
+        .chapter-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             padding: 20px;
-            margin: 20px 0;
-            text-align: center;
+            margin: 15px 0;
+            transition: all 0.3s ease;
         }
-        
-        .tehillim-text {
-            background: #fefefe;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 20px 0;
-            text-align: right;
-            font-size: 18px;
-            line-height: 2.2;
-            max-height: 500px;
-            overflow-y: auto;
-            direction: rtl;
+        .chapter-card:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
-        
-        .tehillim-chapter-title {
-            color: #1e40af;
+        .btn-read {
+            background: #4CAF50;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: white;
             font-weight: bold;
-            font-size: 20px;
-            margin-bottom: 16px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 8px;
+            transition: all 0.3s ease;
         }
-        
-        .controls {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+        .btn-read:hover {
+            background: #45a049;
+            transform: translateY(-2px);
         }
-        
-        .no-data-warning {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-            border-radius: 12px;
+        .btn-read:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .completed {
+            background: #d4edda !important;
+            border-color: #c3e6cb !important;
+        }
+        .admin-panel {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .progress {
+            height: 25px !important;
+            border-radius: 15px;
+        }
+        .tehillim-link {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        .tehillim-link:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+        .day-info {
+            background: #e3f2fd;
+            border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
             text-align: center;
-            color: #92400e;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="fas fa-book-open"></i> תהילים קבוצתי</h1>
+            <p class="mb-0">מחזור 30 יום - קריאה משותפת</p>
+        </div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+        <div class="content">
+            <!-- קישור להורדת תהילים -->
+            <a href="https://short-link.me/-E3T" target="_blank" class="tehillim-link">
+                <i class="fas fa-download"></i> להורדת ספר תהילים PDF - לחץ כאן
+            </a>
 
-        const tehillimDivision = {
-            1: ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'],
-            2: ['י', 'יא', 'יב', 'יג', 'יד', 'טו', 'טז', 'יז'],
-            3: ['יח', 'יט', 'כ', 'כא', 'כב'],
-            4: ['כג', 'כד', 'כה', 'כו', 'כז', 'כח'],
-            5: ['כט', 'ל', 'לא', 'לב', 'לג', 'לד'],
-            6: ['לה', 'לו', 'לז', 'לח'],
-            7: ['לט', 'מ', 'מא', 'מב', 'מג'],
-            8: ['מד', 'מה', 'מו', 'מז', 'מח'],
-            9: ['מט', 'נ', 'נא', 'נב', 'נג', 'נד'],
-            10: ['נה', 'נו', 'נז', 'נח', 'נט'],
-            11: ['ס', 'סא', 'סב', 'סג', 'סד', 'סה'],
-            12: ['סו', 'סז', 'סח'],
-            13: ['סט', 'ע', 'עא'],
-            14: ['עב', 'עג', 'עד', 'עה', 'עו'],
-            15: ['עז', 'עח'],
-            16: ['עט', 'פ', 'פא', 'פב'],
-            17: ['פג', 'פד', 'פה', 'פו', 'פז'],
-            18: ['פח', 'פט'],
-            19: ['צ', 'צא', 'צב', 'צג', 'צד', 'צה'],
-            20: ['צו', 'צז', 'צח', 'צט', 'ק'],
-            21: ['קא', 'קב', 'קג', 'קד', 'קה'],
-            22: ['קו', 'קז', 'קח', 'קט'],
-            23: ['קי', 'קיא', 'קיב', 'קיג', 'קיד', 'קטו', 'קטז', 'קיז', 'קיח'],
-            24: ['קיט'],
-            25: ['קכ', 'קכא', 'קכב', 'קכג', 'קכד', 'קכה', 'קכו', 'קכז', 'קכח', 'קכט', 'קל', 'קלא', 'קלב', 'קלג', 'קלד'],
-            26: ['קלה', 'קלו', 'קלז', 'קלח', 'קלט'],
-            27: ['קמ', 'קמא', 'קמב', 'קמג', 'קמד', 'קמה'],
-            28: ['קמו', 'קמז', 'קמח', 'קמט'],
-            29: ['קנ'],
-            30: ['תהילה לדוד']
-        };
+            <!-- מידע על היום הנוכחי -->
+            <div class="day-info">
+                <h3>יום <span id="currentDayDisplay">1</span> במחזור</h3>
+                <p id="currentChapters" class="mb-0">פרקים א-ט</p>
+            </div>
 
-        const getTodayInfo = () => {
-            const today = new Date();
-            const dayOfMonth = today.getDate();
-            
-            const cycleOverride = localStorage.getItem('cycleOverride');
-            let cycleDay;
-            
-            if (cycleOverride) {
-                const override = JSON.parse(cycleOverride);
-                const originalDate = new Date(override.originalDate);
-                const currentDate = new Date();
-                const daysDiff = Math.floor((currentDate - originalDate) / (1000 * 60 * 60 * 24));
-                cycleDay = ((override.overrideCycleDay - 1 + daysDiff) % 30) + 1;
-            } else {
-                cycleDay = ((dayOfMonth - 1) % 30) + 1;
-            }
-            
-            return {
-                dayOfMonth,
-                cycleDay,
-                hebrewDate: today.toLocaleDateString('he-IL')
-            };
-        };
-
-        const getParticipantAssignment = (participantId, todayInfo) => {
-            const assignmentDay = todayInfo.cycleDay;
-            const chapters = tehillimDivision[assignmentDay] || [];
-            return { participantId, assignmentDay, chapters, todayInfo };
-        };
-
-        const getChaptersText = (chapters) => {
-            // הקוד יקרא מהקובץ הנפרד tehillim-data.js
-            if (typeof window.tehillimText === 'undefined') {
-                return "טוען את הטקסט...";
-            }
-            return chapters.map(chapter => window.tehillimText[chapter]).filter(Boolean).join('\n\n');
-        };
-
-        const loadParticipants = () => {
-            const savedData = localStorage.getItem('tehillimParticipants');
-            if (savedData) {
-                try {
-                    const parsed = JSON.parse(savedData);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        return parsed;
-                    }
-                } catch (e) {
-                    console.error('Error parsing saved data:', e);
-                }
-            }
-            return [];
-        };
-
-        const getAppUrl = () => {
-            return window.location.origin + window.location.pathname;
-        };
-
-        const createWhatsAppLink = (participant, todayInfo) => {
-            const assignment = getParticipantAssignment(participant.id, todayInfo);
-            const chaptersText = assignment.chapters.join('-');
-            const appUrl = getAppUrl();
-            
-            const message = `📖 שלום ${participant.name}! 
-
-🗓️ היום ${todayInfo.hebrewDate}
-📊 יום ${todayInfo.cycleDay} במחזור התהילים
-
-📜 החלק שלך להיום: פרקים ${chaptersText}
-
-🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨
-
-✅ לאישור שקראת ולצפייה בהתקדמות:
-${appUrl}?participant=${participant.id}
-
-תודה שאתה חלק מהמעגל הקדוש! 🕯️`;
-
-            const cleanPhone = participant.phone.replace('+972-', '972').replace(/-/g, '');
-            return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-        };
-
-        const TehillimApp = () => {
-            const [readingStatus, setReadingStatus] = useState({});
-            const [todayInfo, setTodayInfo] = useState(getTodayInfo());
-            const [participants, setParticipants] = useState([]);
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const participantId = urlParams.get('participant');
-            const isParticipantView = participantId !== null;
-            const currentParticipantId = isParticipantView ? parseInt(participantId) : null;
-
-            useEffect(() => {
-                const loadedParticipants = loadParticipants();
-                setParticipants(loadedParticipants);
+            <!-- תוכן עבור משתתפים -->
+            <div id="participantView">
+                <div id="todayChapters"></div>
                 
-                const savedStatus = localStorage.getItem(`reading-status-${todayInfo.cycleDay}`);
-                if (savedStatus) {
-                    try {
-                        setReadingStatus(JSON.parse(savedStatus));
-                    } catch (e) {
-                        console.error('Error loading reading status:', e);
-                    }
-                }
-            }, []);
+                <div class="text-center mt-4">
+                    <button id="markAsReadBtn" class="btn btn-read btn-lg">
+                        <i class="fas fa-check"></i> סימנתי כקראתי
+                    </button>
+                </div>
 
-            const resetCycle = () => {
-                const today = new Date();
-                const override = {
-                    originalDate: today.toISOString(),
-                    overrideCycleDay: 1
-                };
-                localStorage.setItem('cycleOverride', JSON.stringify(override));
-                setTodayInfo(getTodayInfo());
-                setReadingStatus({});
-                localStorage.removeItem(`reading-status-${todayInfo.cycleDay}`);
-            };
+                <div id="completionMessage" class="alert alert-success mt-3" style="display: none;">
+                    <i class="fas fa-check-circle"></i> מעולה! סימנת שקראת את הפרקים של היום
+                </div>
 
-            useEffect(() => {
-                localStorage.setItem(`reading-status-${todayInfo.cycleDay}`, JSON.stringify(readingStatus));
-            }, [readingStatus, todayInfo.cycleDay]);
+                <div class="text-center mt-4">
+                    <button id="shareWhatsAppBtn" class="btn btn-success btn-lg">
+                        <i class="fab fa-whatsapp"></i> שתף בWhatsApp
+                    </button>
+                </div>
+            </div>
 
-            const toggleReadingStatus = (participantId) => {
-                setReadingStatus(prev => ({
-                    ...prev,
-                    [participantId]: !prev[participantId]
-                }));
-            };
-
-            if (participants.length === 0) {
-                return (
-                    <div className="container">
-                        <h1 className="app-title">🕯️ קריאת תהילים קבוצתית 🕯️</h1>
-                        
-                        <div className="no-data-warning">
-                            <h2>⚠️ לא נטענו נתוני משתתפים</h2>
-                            <p>כדי להתחיל, יש צורך לטעון נתוני משתתפים תחילה.</p>
-                            <a 
-                                href="./data-manager.html"
-                                className="btn btn-primary"
-                                style={{ fontSize: '18px', padding: '16px 32px', marginTop: '16px' }}
-                            >
-                                🔧 נהל נתוני משתתפים
-                            </a>
-                        </div>
-                    </div>
-                );
-            }
-
-            const completedCount = Object.values(readingStatus).filter(Boolean).length;
-            const totalChapters = Object.values(tehillimDivision).flat().length;
-            let completedChapters = 0;
-            
-            for (const [participantId, isRead] of Object.entries(readingStatus)) {
-                if (isRead) {
-                    const chapters = tehillimDivision[todayInfo.cycleDay] || [];
-                    completedChapters += chapters.length;
-                }
-            }
-
-            if (isParticipantView) {
-                const assignment = getParticipantAssignment(currentParticipantId, todayInfo);
-                const isCompleted = readingStatus[currentParticipantId] || false;
-                const participant = participants.find(p => p.id === currentParticipantId);
-                const chaptersText = getChaptersText(assignment.chapters);
-
-                return (
-                    <div className="container">
-                        <h1 className="app-title">🕯️ קריאת תהילים קבוצתית 🕯️</h1>
-                        
-                        <div className="date-info">
-                            <h3>📅 {todayInfo.hebrewDate}</h3>
-                            <p>יום {todayInfo.cycleDay} במחזור התהילים</p>
-                        </div>
-
-                        <div className="card">
-                            <h2>👤 משתתף {currentParticipantId}</h2>
-                            
-                            <div className="chapter-display">
-                                <h3>📜 החלק שלך להיום:</h3>
-                                <h2 style={{ color: '#3b82f6', margin: '16px 0' }}>
-                                    פרקים {assignment.chapters.join('-')}
-                                </h2>
-                            </div>
-
-                            {chaptersText && chaptersText !== "טוען את הטקסט..." && (
-                                <div className="tehillim-text">
-                                    <div className="tehillim-chapter-title">
-                                        📖 הטקסט המלא לקריאה
-                                    </div>
-                                    <div style={{ whiteSpace: 'pre-line' }}>
-                                        {chaptersText}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div style={{ textAlign: 'center', margin: '32px 0' }}>
-                                <button
-                                    className={`btn ${isCompleted ? 'btn-success' : 'btn-primary'}`}
-                                    onClick={() => toggleReadingStatus(currentParticipantId)}
-                                    style={{ padding: '16px 32px', fontSize: '18px' }}
-                                >
-                                    {isCompleted ? '✅ קראתי!' : '📖 לחץ אחרי שקראת'}
-                                </button>
-                            </div>
-
-                            {isCompleted && (
-                                <div style={{ 
-                                    background: '#d1fae5', 
-                                    color: '#065f46', 
-                                    padding: '16px', 
-                                    borderRadius: '12px',
-                                    textAlign: 'center',
-                                    marginTop: '16px'
-                                }}>
-                                    🎉 כל הכבוד! קראת את החלק שלך היום!
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="card">
-                            <div className="simple-view">
-                                <h3>📊 התקדמות כללית</h3>
-                                
-                                <div style={{ marginBottom: '20px' }}>
-                                    <h4>משתתפים שסיימו: {completedCount}/{participants.length}</h4>
-                                    <div className="progress-bar">
-                                        <div 
-                                            className="progress-fill" 
-                                            style={{ width: `${(completedCount / participants.length) * 100}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="container">
-                    <h1 className="app-title">🕯️ קריאת תהילים קבוצתית - ניהול 🕯️</h1>
+            <!-- פאנל ניהול עבור אדמין -->
+            <div id="adminView" style="display: none;">
+                <div class="admin-panel">
+                    <h4><i class="fas fa-cogs"></i> פאנל ניהול</h4>
                     
-                    <div className="date-info">
-                        <h3>📅 {todayInfo.hebrewDate}</h3>
-                        <p>יום {todayInfo.cycleDay} במחזור התהילים</p>
-                    </div>
-
-                    <div className="card">
-                        <h3>🎛️ פעולות ניהול</h3>
-                        <div className="controls">
-                            <button 
-                                className="btn btn-warning"
-                                onClick={resetCycle}
-                            >
-                                🔄 איפוס מחזור ליום 1
+                    <!-- מעקב התקדמות -->
+                    <div id="progress" class="mb-4"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button id="resetCycleBtn" class="btn btn-warning w-100 mb-2">
+                                <i class="fas fa-redo"></i> איפוס מחזור חדש
                             </button>
-                            <a 
-                                href="./data-manager.html"
-                                className="btn btn-secondary"
-                            >
-                                🔧 נהל נתוני משתתפים
+                        </div>
+                        <div class="col-md-6">
+                            <a href="data-manager.html" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-users"></i> ניהול משתתפים
                             </a>
                         </div>
                     </div>
-
-                    <div className="card">
-                        <div className="progress-section">
-                            <h3>📊 התקדמות היום</h3>
-                            
-                            <div style={{ marginBottom: '20px' }}>
-                                <h4>משתתפים שסיימו: {completedCount}/{participants.length}</h4>
-                                <div className="progress-bar">
-                                    <div 
-                                        className="progress-fill" 
-                                        style={{ width: `${(completedCount / participants.length) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <h3>👥 רשימת משתתפים ({participants.length})</h3>
-                        <p style={{ color: '#6b7280', marginBottom: '20px' }}>
-                            🗓️ היום כולם קוראים: פרקים {tehillimDivision[todayInfo.cycleDay]?.join('-')}
-                        </p>
-                        {participants.map((participant) => {
-                            const assignment = getParticipantAssignment(participant.id, todayInfo);
-                            const isCompleted = readingStatus[participant.id] || false;
-                            
-                            return (
-                                <div key={participant.id} className="participant-row">
-                                    <div className="participant-info">
-                                        <div className="participant-name">{participant.name}</div>
-                                        <div className="participant-chapters">
-                                            טלפון: {participant.phone}
-                                        </div>
-                                    </div>
-                                    
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span className={`status-badge ${isCompleted ? 'status-completed' : 'status-pending'}`}>
-                                            {isCompleted ? '✅ קרא' : '⏳ ממתין'}
-                                        </span>
-                                        
-                                        <button
-                                            className={`btn ${isCompleted ? 'btn-success' : 'btn-primary'}`}
-                                            onClick={() => toggleReadingStatus(participant.id)}
-                                            style={{ fontSize: '12px' }}
-                                        >
-                                            {isCompleted ? '↩️ בטל' : '✅ סמן כקרא'}
-                                        </button>
-                                        
-                                        <a
-                                            href={createWhatsAppLink(participant, todayInfo)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="btn btn-whatsapp"
-                                        >
-                                            📱 WhatsApp
-                                        </a>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    
+                    <div class="mt-3">
+                        <label for="daySelect" class="form-label">עבור ליום:</label>
+                        <select id="daySelect" class="form-select">
+                            <!-- יתווספו אופציות ב-JS -->
+                        </select>
+                        <button id="changeDayBtn" class="btn btn-info mt-2 w-100">שנה יום</button>
                     </div>
                 </div>
-            );
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="tehillim-data.js"></script>
+    <script>
+        // נתונים בסיסיים
+        const TOTAL_DAYS = 30;
+        const CHAPTERS_PER_DAY = {
+            1: 'א-ט', 2: 'י-יז', 3: 'יח-כב', 4: 'כג-כח', 5: 'כט-לד',
+            6: 'לה-לח', 7: 'לט-מג', 8: 'מד-מח', 9: 'מט-נד', 10: 'נה-נט',
+            11: 'ס-סד', 12: 'סה-סח', 13: 'סט-עא', 14: 'עב-עו', 15: 'עז-פב',
+            16: 'פג-פז', 17: 'פח-פט', 18: 'צ-צו', 19: 'צז-קג', 20: 'קד-קה',
+            21: 'קו-קט', 22: 'קי-קיב', 23: 'קיג-קיח', 24: 'קיט', 25: 'קכ-קלד',
+            26: 'קלה-קלב', 27: 'קלג-קלט', 28: 'קמ-קמד', 29: 'קמה-קנ', 30: 'תהילים כל הספר'
         };
 
-        ReactDOM.render(<TehillimApp />, document.getElementById('root'));
+        // פונקציות עזר
+        function getCurrentDay() {
+            const stored = localStorage.getItem('tehillim_current_day');
+            return stored ? parseInt(stored) : 1;
+        }
+
+        function setCurrentDay(day) {
+            localStorage.setItem('tehillim_current_day', day.toString());
+        }
+
+        function getParticipants() {
+            const stored = localStorage.getItem('tehillim_participants');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function getReadingStatus() {
+            const stored = localStorage.getItem('tehillim_reading_status');
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function setReadingStatus(status) {
+            localStorage.setItem('tehillim_reading_status', JSON.stringify(status));
+        }
+
+        function getCurrentParticipantId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const participantParam = urlParams.get('participant');
+            return participantParam ? parseInt(participantParam) : null;
+        }
+
+        function isAdmin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('admin') === 'true';
+        }
+
+        // עדכון תצוגת יום נוכחי
+        function updateCurrentDayDisplay() {
+            const currentDay = getCurrentDay();
+            document.getElementById('currentDayDisplay').textContent = currentDay;
+            document.getElementById('currentChapters').textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
+        }
+
+        // הצגת פרקי היום
+        function showTodayChapters() {
+            const currentDay = getCurrentDay();
+            const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            const container = document.getElementById('todayChapters');
+            
+            container.innerHTML = `
+                <div class="chapter-card">
+                    <h4><i class="fas fa-book"></i> פרקי היום</h4>
+                    <h2 class="text-primary">תהילים ${chaptersText}</h2>
+                    <p class="text-muted">יום ${currentDay} מתוך ${TOTAL_DAYS}</p>
+                </div>
+            `;
+        }
+
+        // בדיקת סטטוס קריאה
+        function checkReadingStatus() {
+            const participantId = getCurrentParticipantId();
+            if (!participantId) return false;
+
+            const currentDay = getCurrentDay();
+            const readingStatus = getReadingStatus();
+            const participantKey = `participant_${participantId}`;
+            
+            return readingStatus[participantKey] && readingStatus[participantKey][currentDay];
+        }
+
+        // עדכון כפתור קריאה
+        function updateReadButton() {
+            const button = document.getElementById('markAsReadBtn');
+            const message = document.getElementById('completionMessage');
+            const hasRead = checkReadingStatus();
+            
+            if (hasRead) {
+                button.innerHTML = '<i class="fas fa-check-circle"></i> קראתי היום';
+                button.disabled = true;
+                button.classList.add('btn-secondary');
+                button.classList.remove('btn-read');
+                message.style.display = 'block';
+            } else {
+                button.innerHTML = '<i class="fas fa-check"></i> סימנתי כקראתי';
+                button.disabled = false;
+                button.classList.remove('btn-secondary');
+                button.classList.add('btn-read');
+                message.style.display = 'none';
+            }
+        }
+
+        // סימון קריאה
+        function markAsRead() {
+            const participantId = getCurrentParticipantId();
+            if (!participantId) {
+                alert('שגיאה: לא נמצא מזהה משתתף');
+                return;
+            }
+
+            const currentDay = getCurrentDay();
+            const readingStatus = getReadingStatus();
+            const participantKey = `participant_${participantId}`;
+            
+            if (!readingStatus[participantKey]) {
+                readingStatus[participantKey] = {};
+            }
+            
+            readingStatus[participantKey][currentDay] = new Date().toISOString();
+            setReadingStatus(readingStatus);
+            
+            updateReadButton();
+            
+            // עדכון התקדמות אם זה אדמין
+            if (isAdmin()) {
+                showProgress();
+            }
+        }
+
+        // הצגת התקדמות (רק מספרים)
+        function showProgress() {
+            const progressDiv = document.getElementById('progress');
+            if (!progressDiv) return;
+            
+            const currentDay = getCurrentDay();
+            const participants = getParticipants();
+            const readingStatus = getReadingStatus();
+            
+            if (participants.length === 0) {
+                progressDiv.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
+                return;
+            }
+            
+            // ספירת מי שקרא היום
+            let completedToday = 0;
+            participants.forEach(participant => {
+                const participantKey = `participant_${participant.id}`;
+                if (readingStatus[participantKey] && readingStatus[participantKey][currentDay]) {
+                    completedToday++;
+                }
+            });
+            
+            // הצגת מספרים בלבד
+            const totalParticipants = participants.length;
+            const percentage = totalParticipants > 0 ? Math.round((completedToday / totalParticipants) * 100) : 0;
+            
+            progressDiv.innerHTML = `
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">התקדמות יום ${currentDay}</h5>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" style="width: ${percentage}%">
+                                ${percentage}%
+                            </div>
+                        </div>
+                        <h4 class="text-primary">${completedToday} מתוך ${totalParticipants} קראו היום</h4>
+                        <p class="text-muted">סה"כ משתתפים: ${totalParticipants}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // שיתוף WhatsApp
+        function shareOnWhatsApp() {
+            const currentDay = getCurrentDay();
+            const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            const participantId = getCurrentParticipantId();
+            
+            let message = `🙏 תהילים קבוצתי - יום ${currentDay}\n`;
+            message += `📖 פרקים ${chaptersText}\n\n`;
+            message += `הצטרפו לקריאה: ${window.location.origin}${window.location.pathname}`;
+            
+            if (participantId) {
+                message += `?participant=${participantId}`;
+            }
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // איפוס מחזור
+        function resetCycle() {
+            if (confirm('האם אתה בטוח שברצונך לאפס את המחזור? פעולה זו תמחק את כל נתוני הקריאה!')) {
+                localStorage.removeItem('tehillim_reading_status');
+                setCurrentDay(1);
+                location.reload();
+            }
+        }
+
+        // שינוי יום
+        function changeDay() {
+            const select = document.getElementById('daySelect');
+            const newDay = parseInt(select.value);
+            setCurrentDay(newDay);
+            location.reload();
+        }
+
+        // אתחול select של ימים
+        function initDaySelect() {
+            const select = document.getElementById('daySelect');
+            const currentDay = getCurrentDay();
+            
+            for (let i = 1; i <= TOTAL_DAYS; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `יום ${i} - פרקים ${CHAPTERS_PER_DAY[i]}`;
+                if (i === currentDay) option.selected = true;
+                select.appendChild(option);
+            }
+        }
+
+        // אתחול האפליקציה
+        function init() {
+            updateCurrentDayDisplay();
+            
+            if (isAdmin()) {
+                document.getElementById('adminView').style.display = 'block';
+                document.getElementById('participantView').style.display = 'block';
+                showProgress();
+                initDaySelect();
+            } else {
+                document.getElementById('participantView').style.display = 'block';
+            }
+            
+            showTodayChapters();
+            updateReadButton();
+            
+            // Event listeners
+            document.getElementById('markAsReadBtn').addEventListener('click', markAsRead);
+            document.getElementById('shareWhatsAppBtn').addEventListener('click', shareOnWhatsApp);
+            
+            if (isAdmin()) {
+                document.getElementById('resetCycleBtn').addEventListener('click', resetCycle);
+                document.getElementById('changeDayBtn').addEventListener('click', changeDay);
+            }
+        }
+
+        // הפעלה כשהעמוד נטען
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
