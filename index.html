@@ -14,7 +14,7 @@
             padding: 20px 0;
         }
         .main-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -98,6 +98,20 @@
             margin: 20px 0;
             text-align: center;
         }
+        .whatsapp-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .whatsapp-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.9em;
+            padding: 5px 10px;
+        }
     </style>
 </head>
 <body>
@@ -167,6 +181,14 @@
                             <!-- יתווספו אופציות ב-JS -->
                         </select>
                         <button id="changeDayBtn" class="btn btn-info mt-2 w-100">שנה יום</button>
+                    </div>
+                </div>
+
+                <!-- רשימת הודעות WhatsApp -->
+                <div class="admin-panel">
+                    <h4><i class="fab fa-whatsapp"></i> שליחת הודעות WhatsApp</h4>
+                    <div id="whatsappList">
+                        <!-- יתווסף ב-JavaScript -->
                     </div>
                 </div>
             </div>
@@ -298,9 +320,10 @@
             
             updateReadButton();
             
-            // עדכון התקדמות אם זה אדמין
+            // עדכון התקדמות ורשימת WhatsApp אם זה אדמין
             if (isAdmin()) {
                 showProgress();
+                showWhatsAppList();
             }
         }
 
@@ -347,7 +370,109 @@
             `;
         }
 
-        // שיתוף WhatsApp
+        // הצגת רשימת הודעות WhatsApp
+        function showWhatsAppList() {
+            const container = document.getElementById('whatsappList');
+            if (!container) return;
+            
+            const participants = getParticipants();
+            const currentDay = getCurrentDay();
+            const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            
+            if (participants.length === 0) {
+                container.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
+                return;
+            }
+            
+            let html = '';
+            participants.forEach(participant => {
+                const readingStatus = getReadingStatus();
+                const participantKey = `participant_${participant.id}`;
+                const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
+                const statusIcon = hasRead ? '✅' : '⏳';
+                
+                // יצירת הודעה אישית
+                const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
+                let message = `🙏 שלום ${participant.name}!\n\n`;
+                message += `📅 תהילים קבוצתי - יום ${currentDay}\n`;
+                message += `📖 פרקים ${chaptersText}\n\n`;
+                message += `🔗 הקישור האישי שלך:\n${personalLink}\n\n`;
+                message += `תזכה למצוות! 💙`;
+                
+                const whatsappUrl = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
+                
+                html += `
+                    <div class="whatsapp-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-5">
+                                <strong>${participant.name}</strong><br>
+                                <small class="text-muted">${participant.phone}</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge status-badge ${hasRead ? 'bg-success' : 'bg-warning'}">${statusIcon} ${hasRead ? 'קרא' : 'לא קרא'}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success btn-sm w-100">
+                                    <i class="fab fa-whatsapp"></i> שלח הודעה אישית
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // כפתור שליחה לכולם
+            html += `
+                <div class="text-center mt-3">
+                    <button id="sendToAllBtn" class="btn btn-primary btn-lg">
+                        <i class="fab fa-whatsapp"></i> שלח לכולם (${participants.length} טאבים)
+                    </button>
+                    <br><small class="text-muted mt-2 d-block">יפתח טאב נפרד לכל משתתף</small>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Event listener לכפתור שליחה לכולם
+            const sendToAllButton = document.getElementById('sendToAllBtn');
+            if (sendToAllButton) {
+                sendToAllButton.addEventListener('click', sendToAll);
+            }
+        }
+
+        // שליחה לכולם
+        function sendToAll() {
+            const participants = getParticipants();
+            const currentDay = getCurrentDay();
+            const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            
+            if (participants.length === 0) {
+                alert('אין משתתפים רשומים');
+                return;
+            }
+            
+            if (!confirm(`לשלוח הודעות ל-${participants.length} משתתפים?\n(יפתח ${participants.length} טאבים)`)) {
+                return;
+            }
+            
+            participants.forEach((participant, index) => {
+                setTimeout(() => {
+                    const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
+                    let message = `🙏 שלום ${participant.name}!\n\n`;
+                    message += `📅 תהילים קבוצתי - יום ${currentDay}\n`;
+                    message += `📖 פרקים ${chaptersText}\n\n`;
+                    message += `🔗 הקישור האישי שלך:\n${personalLink}\n\n`;
+                    message += `תזכה למצוות! 💙`;
+                    
+                    const whatsappUrl = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, `whatsapp${index}`);
+                }, index * 500); // השהייה של חצי שנייה בין הודעות
+            });
+            
+            alert(`נפתחו ${participants.length} טאבים של WhatsApp!`);
+        }
+
+        // שיתוף WhatsApp כללי
         function shareOnWhatsApp() {
             const currentDay = getCurrentDay();
             const chaptersText = CHAPTERS_PER_DAY[currentDay];
@@ -404,6 +529,7 @@
                 document.getElementById('adminView').style.display = 'block';
                 document.getElementById('participantView').style.display = 'block';
                 showProgress();
+                showWhatsAppList();
                 initDaySelect();
             } else {
                 document.getElementById('participantView').style.display = 'block';
