@@ -119,8 +119,12 @@
             margin: 10px 0;
             border: 1px solid #dee2e6;
         }
-        .modal {
-            z-index: 1050;
+        .add-participant-form {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px dashed #dee2e6;
         }
     </style>
 </head>
@@ -179,7 +183,7 @@
                             </button>
                         </div>
                         <div class="col-md-4">
-                            <button id="manageParticipantsBtn" class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#participantsModal">
+                            <button id="manageParticipantsBtn" class="btn btn-primary w-100 mb-2">
                                 <i class="fas fa-users"></i> ניהול משתתפים
                             </button>
                         </div>
@@ -199,35 +203,19 @@
                     </div>
                 </div>
 
-                <!-- רשימת הודעות WhatsApp -->
-                <div class="admin-panel">
-                    <h4><i class="fab fa-whatsapp"></i> שליחת הודעות WhatsApp</h4>
-                    <div id="whatsappList">
-                        <!-- יתווסף ב-JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal ניהול משתתפים -->
-    <div class="modal fade" id="participantsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-users"></i> ניהול משתתפים</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
+                <!-- ניהול משתתפים -->
+                <div id="participantsManagement" class="admin-panel" style="display: none;">
+                    <h4><i class="fas fa-users"></i> ניהול משתתפים</h4>
+                    
                     <!-- הוספת משתתף חדש -->
-                    <div class="mb-4">
+                    <div class="add-participant-form">
                         <h6><i class="fas fa-user-plus"></i> הוסף משתתף חדש</h6>
                         <div class="row">
                             <div class="col-md-5">
                                 <input type="text" id="newParticipantName" class="form-control" placeholder="שם מלא">
                             </div>
                             <div class="col-md-5">
-                                <input type="tel" id="newParticipantPhone" class="form-control" placeholder="מספר טלפון (עם 972)">
+                                <input type="tel" id="newParticipantPhone" class="form-control" placeholder="מספר טלפון (972501234567)">
                             </div>
                             <div class="col-md-2">
                                 <button id="addParticipantBtn" class="btn btn-success w-100">
@@ -235,6 +223,7 @@
                                 </button>
                             </div>
                         </div>
+                        <small class="text-muted">דוגמה: 972501234567 או 0501234567</small>
                     </div>
 
                     <!-- רשימת משתתפים -->
@@ -244,9 +233,20 @@
                             <!-- יתווסף ב-JavaScript -->
                         </div>
                     </div>
+                    
+                    <div class="text-center mt-3">
+                        <button id="hideParticipantsBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> סגור
+                        </button>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+
+                <!-- רשימת הודעות WhatsApp -->
+                <div class="admin-panel">
+                    <h4><i class="fab fa-whatsapp"></i> שליחת הודעות WhatsApp</h4>
+                    <div id="whatsappList">
+                        <!-- יתווסף ב-JavaScript -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -328,7 +328,7 @@
             // פורמט מספר טלפון
             const formattedPhone = formatPhoneNumber(phone);
             if (!formattedPhone) {
-                alert('מספר טלפון לא תקין. השתמש בפורמט: 972501234567');
+                alert('מספר טלפון לא תקין. השתמש בפורמט: 972501234567 או 0501234567');
                 return;
             }
             
@@ -361,7 +361,7 @@
             showProgress();
             showWhatsAppList();
             
-            alert('משתתף נוסף בהצלחה!');
+            alert(`משתתף נוסף בהצלחה!\nשם: ${name}\nטלפון: ${formattedPhone}\nID: ${newId}`);
         }
 
         function formatPhoneNumber(phone) {
@@ -398,6 +398,8 @@
             updateParticipantsList();
             showProgress();
             showWhatsAppList();
+            
+            alert('משתתף נמחק בהצלחה!');
         }
 
         function updateParticipantsList() {
@@ -405,7 +407,11 @@
             const countElement = document.getElementById('participantCount');
             const participants = getParticipants();
             
-            countElement.textContent = participants.length;
+            if (countElement) {
+                countElement.textContent = participants.length;
+            }
+            
+            if (!container) return;
             
             if (participants.length === 0) {
                 container.innerHTML = '<p class="text-muted text-center">אין משתתפים רשומים</p>';
@@ -422,7 +428,10 @@
                                 <small class="text-muted">${participant.phone}</small>
                             </div>
                             <div class="col-md-3">
-                                <small class="text-muted">ID: ${participant.id}</small>
+                                <small class="text-muted">ID: ${participant.id}</small><br>
+                                <a href="${window.location.origin}${window.location.pathname}?participant=${participant.id}" target="_blank" class="text-info">
+                                    <small>קישור אישי</small>
+                                </a>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn btn-danger btn-sm w-100" onclick="removeParticipant(${participant.id})">
@@ -437,11 +446,40 @@
             container.innerHTML = html;
         }
 
+        function showParticipantsManagement() {
+            const management = document.getElementById('participantsManagement');
+            if (management) {
+                management.style.display = 'block';
+                updateParticipantsList();
+                // פוקוס על שדה השם
+                setTimeout(() => {
+                    const nameField = document.getElementById('newParticipantName');
+                    if (nameField) {
+                        nameField.focus();
+                    }
+                }, 100);
+            }
+        }
+
+        function hideParticipantsManagement() {
+            const management = document.getElementById('participantsManagement');
+            if (management) {
+                management.style.display = 'none';
+            }
+        }
+
         // עדכון תצוגת יום נוכחי
         function updateCurrentDayDisplay() {
             const currentDay = getCurrentDay();
-            document.getElementById('currentDayDisplay').textContent = currentDay;
-            document.getElementById('currentChapters').textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
+            const currentDayDisplay = document.getElementById('currentDayDisplay');
+            const currentChapters = document.getElementById('currentChapters');
+            
+            if (currentDayDisplay) {
+                currentDayDisplay.textContent = currentDay;
+            }
+            if (currentChapters) {
+                currentChapters.textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
+            }
         }
 
         // הצגת פרקי היום
@@ -449,6 +487,8 @@
             const currentDay = getCurrentDay();
             const chaptersText = CHAPTERS_PER_DAY[currentDay];
             const container = document.getElementById('todayChapters');
+            
+            if (!container) return;
             
             container.innerHTML = `
                 <div class="chapter-card">
@@ -475,6 +515,9 @@
         function updateReadButton() {
             const button = document.getElementById('markAsReadBtn');
             const message = document.getElementById('completionMessage');
+            
+            if (!button) return;
+            
             const hasRead = checkReadingStatus();
             
             if (hasRead) {
@@ -482,13 +525,13 @@
                 button.disabled = true;
                 button.classList.add('btn-secondary');
                 button.classList.remove('btn-read');
-                message.style.display = 'block';
+                if (message) message.style.display = 'block';
             } else {
                 button.innerHTML = '<i class="fas fa-check"></i> סימנתי כקראתי';
                 button.disabled = false;
                 button.classList.remove('btn-secondary');
                 button.classList.add('btn-read');
-                message.style.display = 'none';
+                if (message) message.style.display = 'none';
             }
         }
 
@@ -675,14 +718,19 @@
             alert(`נפתחו ${participants.length} טאבים של WhatsApp!`);
         }
 
-        // שיתוף WhatsApp כללי
+        // שיתוף WhatsApp כללי (למשתתפים רגילים)
         function shareOnWhatsApp() {
             const currentDay = getCurrentDay();
             const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            const participantId = getCurrentParticipantId();
             
             let message = `🙏 תהילים קבוצתי - יום ${currentDay}\n`;
             message += `📖 פרקים ${chaptersText}\n\n`;
             message += `הצטרפו לקריאה: ${window.location.origin}${window.location.pathname}`;
+            
+            if (participantId) {
+                message += `?participant=${participantId}`;
+            }
             
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
@@ -697,29 +745,11 @@
             }
         }
 
-        // ייצוא נתונים
-        function exportData() {
-            const data = {
-                participants: getParticipants(),
-                readingStatus: getReadingStatus(),
-                currentDay: getCurrentDay(),
-                exportDate: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
         // שינוי יום
         function changeDay() {
             const select = document.getElementById('daySelect');
+            if (!select) return;
+            
             const newDay = parseInt(select.value);
             setCurrentDay(newDay);
             location.reload();
@@ -728,6 +758,8 @@
         // אתחול select של ימים
         function initDaySelect() {
             const select = document.getElementById('daySelect');
+            if (!select) return;
+            
             const currentDay = getCurrentDay();
             
             for (let i = 1; i <= TOTAL_DAYS; i++) {
@@ -739,41 +771,107 @@
             }
         }
 
+        // ייצוא נתונים
+        function exportData() {
+            const participants = getParticipants();
+            const readingStatus = getReadingStatus();
+            const currentDay = getCurrentDay();
+            
+            const data = {
+                participants: participants,
+                readingStatus: readingStatus,
+                currentDay: currentDay,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
         // אתחול האפליקציה
         function init() {
             updateCurrentDayDisplay();
             
             if (isAdmin()) {
-                document.getElementById('adminView').style.display = 'block';
-                document.getElementById('participantView').style.display = 'block';
+                const adminView = document.getElementById('adminView');
+                const participantView = document.getElementById('participantView');
+                
+                if (adminView) adminView.style.display = 'block';
+                if (participantView) participantView.style.display = 'block';
+                
                 showProgress();
                 showWhatsAppList();
-                updateParticipantsList();
                 initDaySelect();
+                
+                // Event listeners לאדמין
+                const manageBtn = document.getElementById('manageParticipantsBtn');
+                const hideBtn = document.getElementById('hideParticipantsBtn');
+                const addBtn = document.getElementById('addParticipantBtn');
+                const resetBtn = document.getElementById('resetCycleBtn');
+                const changeDayBtn = document.getElementById('changeDayBtn');
+                const exportBtn = document.getElementById('exportDataBtn');
+                
+                if (manageBtn) {
+                    manageBtn.addEventListener('click', showParticipantsManagement);
+                }
+                if (hideBtn) {
+                    hideBtn.addEventListener('click', hideParticipantsManagement);
+                }
+                if (addBtn) {
+                    addBtn.addEventListener('click', addParticipant);
+                }
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', resetCycle);
+                }
+                if (changeDayBtn) {
+                    changeDayBtn.addEventListener('click', changeDay);
+                }
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', exportData);
+                }
+                
+                // Enter להוספת משתתף
+                const nameField = document.getElementById('newParticipantName');
+                const phoneField = document.getElementById('newParticipantPhone');
+                
+                if (nameField) {
+                    nameField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            addParticipant();
+                        }
+                    });
+                }
+                
+                if (phoneField) {
+                    phoneField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            addParticipant();
+                        }
+                    });
+                }
+                
             } else {
-                document.getElementById('participantView').style.display = 'block';
+                const participantView = document.getElementById('participantView');
+                if (participantView) participantView.style.display = 'block';
             }
             
             showTodayChapters();
             updateReadButton();
             
-            // Event listeners
-            document.getElementById('markAsReadBtn').addEventListener('click', markAsRead);
-            document.getElementById('shareWhatsAppBtn').addEventListener('click', shareOnWhatsApp);
+            // Event listeners כלליים
+            const markBtn = document.getElementById('markAsReadBtn');
+            const shareBtn = document.getElementById('shareWhatsAppBtn');
             
-            if (isAdmin()) {
-                document.getElementById('resetCycleBtn').addEventListener('click', resetCycle);
-                document.getElementById('changeDayBtn').addEventListener('click', changeDay);
-                document.getElementById('exportDataBtn').addEventListener('click', exportData);
-                document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
-                
-                // Enter key בשדות הוספת משתתף
-                document.getElementById('newParticipantName').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') addParticipant();
-                });
-                document.getElementById('newParticipantPhone').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') addParticipant();
-                });
+            if (markBtn) {
+                markBtn.addEventListener('click', markAsRead);
+            }
+            if (shareBtn) {
+                shareBtn.addEventListener('click', shareOnWhatsApp);
             }
         }
 
