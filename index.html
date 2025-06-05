@@ -14,7 +14,7 @@
             padding: 20px 0;
         }
         .main-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -112,6 +112,16 @@
             font-size: 0.9em;
             padding: 5px 10px;
         }
+        .participant-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+        }
+        .modal {
+            z-index: 1050;
+        }
     </style>
 </head>
 <body>
@@ -163,15 +173,20 @@
                     <div id="progress" class="mb-4"></div>
                     
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <button id="resetCycleBtn" class="btn btn-warning w-100 mb-2">
                                 <i class="fas fa-redo"></i> איפוס מחזור חדש
                             </button>
                         </div>
-                        <div class="col-md-6">
-                            <a href="data-manager.html" class="btn btn-primary w-100 mb-2">
+                        <div class="col-md-4">
+                            <button id="manageParticipantsBtn" class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#participantsModal">
                                 <i class="fas fa-users"></i> ניהול משתתפים
-                            </a>
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="exportDataBtn" class="btn btn-info w-100 mb-2">
+                                <i class="fas fa-download"></i> ייצוא נתונים
+                            </button>
                         </div>
                     </div>
                     
@@ -195,6 +210,48 @@
         </div>
     </div>
 
+    <!-- Modal ניהול משתתפים -->
+    <div class="modal fade" id="participantsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-users"></i> ניהול משתתפים</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- הוספת משתתף חדש -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-user-plus"></i> הוסף משתתף חדש</h6>
+                        <div class="row">
+                            <div class="col-md-5">
+                                <input type="text" id="newParticipantName" class="form-control" placeholder="שם מלא">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="tel" id="newParticipantPhone" class="form-control" placeholder="מספר טלפון (עם 972)">
+                            </div>
+                            <div class="col-md-2">
+                                <button id="addParticipantBtn" class="btn btn-success w-100">
+                                    <i class="fas fa-plus"></i> הוסף
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- רשימת משתתפים -->
+                    <div>
+                        <h6><i class="fas fa-list"></i> רשימת משתתפים (<span id="participantCount">0</span>)</h6>
+                        <div id="participantsList">
+                            <!-- יתווסף ב-JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="tehillim-data.js"></script>
     <script>
@@ -209,7 +266,7 @@
             26: 'קלה-קלב', 27: 'קלג-קלט', 28: 'קמ-קמד', 29: 'קמה-קנ', 30: 'תהילים כל הספר'
         };
 
-        // פונקציות עזר
+        // פונקציות עזר - נתונים
         function getCurrentDay() {
             const stored = localStorage.getItem('tehillim_current_day');
             return stored ? parseInt(stored) : 1;
@@ -221,12 +278,26 @@
 
         function getParticipants() {
             const stored = localStorage.getItem('tehillim_participants');
-            return stored ? JSON.parse(stored) : [];
+            try {
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error('Error parsing participants:', e);
+                return [];
+            }
+        }
+
+        function setParticipants(participants) {
+            localStorage.setItem('tehillim_participants', JSON.stringify(participants));
         }
 
         function getReadingStatus() {
             const stored = localStorage.getItem('tehillim_reading_status');
-            return stored ? JSON.parse(stored) : {};
+            try {
+                return stored ? JSON.parse(stored) : {};
+            } catch (e) {
+                console.error('Error parsing reading status:', e);
+                return {};
+            }
         }
 
         function setReadingStatus(status) {
@@ -242,6 +313,128 @@
         function isAdmin() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('admin') === 'true';
+        }
+
+        // פונקציות ניהול משתתפים
+        function addParticipant() {
+            const name = document.getElementById('newParticipantName').value.trim();
+            const phone = document.getElementById('newParticipantPhone').value.trim();
+            
+            if (!name || !phone) {
+                alert('אנא מלא את כל השדות');
+                return;
+            }
+            
+            // פורמט מספר טלפון
+            const formattedPhone = formatPhoneNumber(phone);
+            if (!formattedPhone) {
+                alert('מספר טלפון לא תקין. השתמש בפורמט: 972501234567');
+                return;
+            }
+            
+            const participants = getParticipants();
+            
+            // בדיקת כפילויות
+            if (participants.some(p => p.phone === formattedPhone)) {
+                alert('מספר טלפון כבר קיים');
+                return;
+            }
+            
+            // יצירת ID חדש
+            const newId = participants.length > 0 ? Math.max(...participants.map(p => p.id)) + 1 : 1;
+            
+            // הוספת משתתף
+            participants.push({
+                id: newId,
+                name: name,
+                phone: formattedPhone
+            });
+            
+            setParticipants(participants);
+            
+            // ניקוי שדות
+            document.getElementById('newParticipantName').value = '';
+            document.getElementById('newParticipantPhone').value = '';
+            
+            // עדכון תצוגה
+            updateParticipantsList();
+            showProgress();
+            showWhatsAppList();
+            
+            alert('משתתף נוסף בהצלחה!');
+        }
+
+        function formatPhoneNumber(phone) {
+            // הסרת כל התווים שאינם ספרות
+            const cleanPhone = phone.replace(/\D/g, '');
+            
+            // המרת פורמטים שונים ל-972
+            if (cleanPhone.startsWith('0')) {
+                return '972' + cleanPhone.substring(1);
+            } else if (cleanPhone.startsWith('972')) {
+                return cleanPhone;
+            } else if (cleanPhone.length === 9) {
+                return '972' + cleanPhone;
+            }
+            
+            return null;
+        }
+
+        function removeParticipant(id) {
+            if (!confirm('האם אתה בטוח שברצונך למחוק משתתף זה?')) {
+                return;
+            }
+            
+            const participants = getParticipants();
+            const updatedParticipants = participants.filter(p => p.id !== id);
+            setParticipants(updatedParticipants);
+            
+            // מחיקת נתוני קריאה
+            const readingStatus = getReadingStatus();
+            delete readingStatus[`participant_${id}`];
+            setReadingStatus(readingStatus);
+            
+            // עדכון תצוגה
+            updateParticipantsList();
+            showProgress();
+            showWhatsAppList();
+        }
+
+        function updateParticipantsList() {
+            const container = document.getElementById('participantsList');
+            const countElement = document.getElementById('participantCount');
+            const participants = getParticipants();
+            
+            countElement.textContent = participants.length;
+            
+            if (participants.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">אין משתתפים רשומים</p>';
+                return;
+            }
+            
+            let html = '';
+            participants.forEach(participant => {
+                html += `
+                    <div class="participant-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <strong>${participant.name}</strong><br>
+                                <small class="text-muted">${participant.phone}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">ID: ${participant.id}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-danger btn-sm w-100" onclick="removeParticipant(${participant.id})">
+                                    <i class="fas fa-trash"></i> מחק
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
         }
 
         // עדכון תצוגת יום נוכחי
@@ -337,7 +530,12 @@
             const readingStatus = getReadingStatus();
             
             if (participants.length === 0) {
-                progressDiv.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
+                progressDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> אין משתתפים רשומים
+                        <br><small>לחץ על "ניהול משתתפים" להוספת משתתפים</small>
+                    </div>
+                `;
                 return;
             }
             
@@ -380,7 +578,12 @@
             const chaptersText = CHAPTERS_PER_DAY[currentDay];
             
             if (participants.length === 0) {
-                container.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> אין משתתפים רשומים
+                        <br><small>לחץ על "ניהול משתתפים" להוספת משתתפים</small>
+                    </div>
+                `;
                 return;
             }
             
@@ -476,15 +679,10 @@
         function shareOnWhatsApp() {
             const currentDay = getCurrentDay();
             const chaptersText = CHAPTERS_PER_DAY[currentDay];
-            const participantId = getCurrentParticipantId();
             
             let message = `🙏 תהילים קבוצתי - יום ${currentDay}\n`;
             message += `📖 פרקים ${chaptersText}\n\n`;
             message += `הצטרפו לקריאה: ${window.location.origin}${window.location.pathname}`;
-            
-            if (participantId) {
-                message += `?participant=${participantId}`;
-            }
             
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
@@ -497,6 +695,26 @@
                 setCurrentDay(1);
                 location.reload();
             }
+        }
+
+        // ייצוא נתונים
+        function exportData() {
+            const data = {
+                participants: getParticipants(),
+                readingStatus: getReadingStatus(),
+                currentDay: getCurrentDay(),
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // שינוי יום
@@ -530,6 +748,7 @@
                 document.getElementById('participantView').style.display = 'block';
                 showProgress();
                 showWhatsAppList();
+                updateParticipantsList();
                 initDaySelect();
             } else {
                 document.getElementById('participantView').style.display = 'block';
@@ -545,6 +764,16 @@
             if (isAdmin()) {
                 document.getElementById('resetCycleBtn').addEventListener('click', resetCycle);
                 document.getElementById('changeDayBtn').addEventListener('click', changeDay);
+                document.getElementById('exportDataBtn').addEventListener('click', exportData);
+                document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
+                
+                // Enter key בשדות הוספת משתתף
+                document.getElementById('newParticipantName').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') addParticipant();
+                });
+                document.getElementById('newParticipantPhone').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') addParticipant();
+                });
             }
         }
 
