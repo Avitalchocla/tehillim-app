@@ -978,16 +978,16 @@
                 });
 
                 let message = `📖 שלום ${participant.name}!\n\n`;
-		message += `🗓 היום ${hebrewDate}\n`;
-		message += `📊 יום ${currentDay} במחזור התהילים\n\n`;
-		message += `📜 החלק שלך להיום: פרקים ${participantChapters}\n\n`;
-		message += `🙏 לפני הקריאה אמרו: "לרפואת משה בן טילה"\n\n`;
-		message += `🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨\n\n`;
-		message += `🔗 לצפייה בהתקדמות ולאישור קריאה:\n${personalLink}\n\n`;
-		message += `⚠️ אם הקישור לא עובד (פלאפון כשר) - פשוט שלח חזרה: "קראתי"\n\n`;
-		message += `תזכה למצוות! 💙`;
+                message += `🗓 היום ${hebrewDate}\n`;
+                message += `📊 יום ${currentDay} במחזור התהילים\n\n`;
+                message += `📜 החלק שלך להיום: פרקים ${participantChapters}\n\n`;
+                message += `🙏 לפני הקריאה אמרו: "לרפואת משה בן טילה"\n\n`;
+                message += `🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨\n\n`;
+                message += `🔗 לצפייה בהתקדמות ולאישור קריאה:\n${personalLink}\n\n`;
+                message += `⚠️ אם הקישור לא עובד (פלאפון כשר) - פשוט שלח חזרה: "קראתי"\n\n`;
+                message += `תזכה למצוות! 💙`;
 
-                const whatsappLink = `https://wa.me/${participant.phone}?text=${message}`;
+                const whatsappLink = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
                 const statusBadge = hasRead 
                     ? '<span class="badge bg-success status-badge">✓ קרא</span>'
                     : '<span class="badge bg-secondary status-badge">לא קרא</span>';
