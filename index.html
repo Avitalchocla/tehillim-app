@@ -809,9 +809,9 @@
                 return;
             }
             
-            let participants = getParticipants();
-            participants = participants.filter(p => p.id !== participantId);
-            setParticipants(participants);
+            const participants = getParticipants();
+            const filteredParticipants = participants.filter(p => p.id !== participantId);
+            setParticipants(filteredParticipants);
             
             // מחיקת נתוני קריאה של המשתתף
             const readingStatus = getReadingStatus();
@@ -832,66 +832,39 @@
             const countElement = document.getElementById('participantCount');
             
             if (!container || !countElement) return;
-            
+
             const participants = getParticipants();
             countElement.textContent = participants.length;
-            
+
             if (participants.length === 0) {
                 container.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
                 return;
             }
-            
+
             let html = '';
             participants.forEach(participant => {
-                const participantChapters = getParticipantChapters(participant.id, getCurrentDay());
-                const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
-                
                 html += `
                     <div class="participant-item">
                         <div class="row align-items-center">
-                            <div class="col-md-4">
+                            <div class="col-md-8">
                                 <strong>${participant.name}</strong>
-                                <br><small class="text-muted">ID: ${participant.id}</small>
+                                <br>
+                                <small class="text-muted">ID: ${participant.id} | טלפון: ${participant.phone}</small>
                             </div>
-                            <div class="col-md-3">
-                                <small class="text-muted">טלפון:</small><br>
-                                ${participant.phone}
-                            </div>
-                            <div class="col-md-3">
-                                <small class="text-muted">פרקים היום:</small><br>
-                                ${participantChapters}
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <button class="btn btn-outline-danger btn-sm" onclick="removeParticipant(${participant.id})">
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-danger btn-sm" onclick="removeParticipant(${participant.id})">
                                     <i class="fas fa-trash"></i> מחק
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted">קישור אישי:</small>
-                            <div class="input-group input-group-sm">
-                                <input type="text" class="form-control" value="${personalLink}" readonly>
-                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('${personalLink}')">
-                                    <i class="fas fa-copy"></i> העתק
                                 </button>
                             </div>
                         </div>
                     </div>
                 `;
             });
-            
+
             container.innerHTML = html;
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('הקישור הועתק ללוח!');
-            }).catch(() => {
-                alert('שגיאה בהעתקה. אנא העתק ידנית.');
-            });
-        }
-
-        // פונקציות WhatsApp
+        // הצגת הודעות WhatsApp
         function showWhatsAppList() {
             const container = document.getElementById('whatsappList');
             if (!container) return;
@@ -901,27 +874,26 @@
             const readingStatus = getReadingStatus();
 
             if (participants.length === 0) {
-                container.innerHTML = '<p class="text-muted">אין משתתפים רשומים. הוסף משתתפים כדי לראות הודעות WhatsApp.</p>';
+                container.innerHTML = '<p class="text-muted">אין משתתפים רשומים</p>';
                 return;
             }
 
-            let html = '<div class="mb-3"><h6>הודעות אישיות לכל משתתף:</h6></div>';
-
+            let html = '';
             participants.forEach(participant => {
                 const participantKey = `participant_${participant.id}`;
                 const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
                 const statusBadge = hasRead 
-                    ? '<span class="badge bg-success status-badge">✓ קרא</span>' 
+                    ? '<span class="badge bg-success status-badge">קרא</span>' 
                     : '<span class="badge bg-secondary status-badge">לא קרא</span>';
                 
                 const participantChapters = getParticipantChapters(participant.id, currentDay);
                 const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
 
-                // יצירת הודעה אישית עם עיצוב חמוד ותוספת ברכה + פתרון לכשרים
+                // יצירת הודעה אישית עם אימוג'י וברכת רפואה
                 const today = new Date();
                 const hebrewDate = today.toLocaleDateString('he-IL', {
                     weekday: 'long',
-                    day: 'numeric',
+                    day: 'numeric', 
                     month: 'long',
                     year: 'numeric'
                 });
@@ -941,17 +913,16 @@
                 html += `
                     <div class="whatsapp-card">
                         <div class="row align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <strong>${participant.name}</strong>
                                 <br>
                                 <small class="text-muted">פרקים: ${participantChapters}</small>
                             </div>
-                            <div class="col-md-4 text-center">
+                            <div class="col-md-4 text-end">
                                 ${statusBadge}
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success btn-sm">
-                                    <i class="fab fa-whatsapp"></i> שלח
+                                <br>
+                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success btn-sm mt-1">
+                                    <i class="fab fa-whatsapp"></i> שלח הודעה
                                 </a>
                             </div>
                         </div>
@@ -962,107 +933,7 @@
             container.innerHTML = html;
         }
 
-        // פונקציות תצוגה
-        function showTodayChapters() {
-            const participantId = getCurrentParticipantId();
-            const currentDay = getCurrentDay();
-            
-            // עדכון תצוגת היום הנוכחי
-            updateCurrentDayDisplay();
-            
-            if (!participantId) return;
-            
-            const participants = getParticipants();
-            const participant = participants.find(p => p.id === participantId);
-            
-            if (!participant) {
-                document.getElementById('todayChapters').innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i> משתתף לא נמצא
-                    </div>
-                `;
-                return;
-            }
-            
-            const participantChapters = getParticipantChapters(participantId, currentDay);
-            
-            document.getElementById('todayChapters').innerHTML = `
-                <div class="chapter-card">
-                    <h4><i class="fas fa-user"></i> שלום ${participant.name}!</h4>
-                    <h5><i class="fas fa-book"></i> הפרקים שלך להיום:</h5>
-                    <div class="h3 text-primary mb-3">${participantChapters}</div>
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-info-circle"></i> 
-                        זכור: לפני הקריאה אמור "לרפואת משה בן טילה"
-                    </p>
-                </div>
-            `;
-            
-            updateReadButton();
-        }
-
-        function updateCurrentDayDisplay() {
-            const currentDay = getCurrentDay();
-            const currentDayElement = document.getElementById('currentDayDisplay');
-            const currentChaptersElement = document.getElementById('currentChapters');
-            
-            if (currentDayElement) {
-                currentDayElement.textContent = currentDay;
-            }
-            
-            if (currentChaptersElement) {
-                currentChaptersElement.textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
-            }
-        }
-
-        function updateReadButton() {
-            const participantId = getCurrentParticipantId();
-            const currentDay = getCurrentDay();
-            
-            if (!participantId) return;
-            
-            const readingStatus = getReadingStatus();
-            const participantKey = `participant_${participantId}`;
-            const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
-            
-            const markButton = document.getElementById('markAsReadBtn');
-            const completionMessage = document.getElementById('completionMessage');
-            
-            if (hasRead) {
-                markButton.disabled = true;
-                markButton.innerHTML = '<i class="fas fa-check-circle"></i> כבר סימנת שקראת';
-                completionMessage.style.display = 'block';
-            } else {
-                markButton.disabled = false;
-                markButton.innerHTML = '<i class="fas fa-check"></i> סימנתי כקראתי';
-                completionMessage.style.display = 'none';
-            }
-        }
-
-        function markAsRead() {
-            const participantId = getCurrentParticipantId();
-            const currentDay = getCurrentDay();
-            
-            if (!participantId) {
-                alert('שגיאה: לא נמצא מזהה משתתף');
-                return;
-            }
-            
-            const readingStatus = getReadingStatus();
-            const participantKey = `participant_${participantId}`;
-            
-            if (!readingStatus[participantKey]) {
-                readingStatus[participantKey] = {};
-            }
-            
-            readingStatus[participantKey][currentDay] = true;
-            setReadingStatus(readingStatus);
-            
-            updateReadButton();
-            alert('תודה! סימנת שקראת את הפרקים של היום 🙏');
-        }
-
-        // פונקציות התקדמות ומעקב
+        // הצגת התקדמות
         function showProgress() {
             const container = document.getElementById('progress');
             if (!container) return;
@@ -1076,7 +947,6 @@
                 return;
             }
 
-            // חישוב התקדמות
             let completedToday = 0;
             participants.forEach(participant => {
                 const participantKey = `participant_${participant.id}`;
@@ -1088,146 +958,205 @@
             const percentage = Math.round((completedToday / participants.length) * 100);
 
             container.innerHTML = `
-                <h6><i class="fas fa-chart-line"></i> התקדמות יום ${currentDay}</h6>
-                <div class="progress mb-2">
-                    <div class="progress-bar bg-success" style="width: ${percentage}%"></div>
+                <h5>התקדמות יום ${currentDay}</h5>
+                <div class="progress">
+                    <div class="progress-bar bg-success" style="width: ${percentage}%">
+                        ${completedToday} מתוך ${participants.length} (${percentage}%)
+                    </div>
                 </div>
-                <p class="mb-0">
-                    <strong>${completedToday} מתוך ${participants.length}</strong> משתתפים קראו היום 
-                    (<strong>${percentage}%</strong>)
+                <p class="mt-2 mb-0">
+                    <small class="text-muted">
+                        ${completedToday} משתתפים קראו את הפרקים שלהם היום
+                    </small>
                 </p>
-                ${percentage === 100 ? '<div class="alert alert-success mt-2 mb-0"><i class="fas fa-trophy"></i> כל הכבוד! כל המשתתפים קראו היום!</div>' : ''}
             `;
         }
 
+        // הצגת פרקים של היום
+        function showTodayChapters() {
+            const container = document.getElementById('todayChapters');
+            if (!container) return;
+
+            const participantId = getCurrentParticipantId();
+            if (!participantId) {
+                container.innerHTML = `
+                    <div class="chapter-card">
+                        <h4>ברוכים הבאים לתהילים קבוצתי!</h4>
+                        <p>לקבלת קישור אישי, פנה למנהל הקבוצה</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentDay = getCurrentDay();
+            const participantChapters = getParticipantChapters(participantId, currentDay);
+            const participant = getParticipants().find(p => p.id === participantId);
+            
+            if (!participant) {
+                container.innerHTML = `
+                    <div class="chapter-card">
+                        <h4>שגיאה</h4>
+                        <p>משתתף לא נמצא במערכת</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="chapter-card">
+                    <h4>שלום ${participant.name}!</h4>
+                    <h5>הפרקים שלך להיום:</h5>
+                    <h3 class="text-primary">${participantChapters}</h3>
+                    <p class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        יום ${currentDay} במחזור
+                    </p>
+                    <hr>
+                    <p class="text-muted mb-0">
+                        <strong>🙏 לפני הקריאה אמרו:</strong><br>
+                        "לרפואת משה בן טילה"
+                    </p>
+                </div>
+            `;
+        }
+
+        // עדכון כפתור קריאה
+        function updateReadButton() {
+            const btn = document.getElementById('markAsReadBtn');
+            const message = document.getElementById('completionMessage');
+            
+            if (!btn || !message) return;
+
+            const participantId = getCurrentParticipantId();
+            if (!participantId) return;
+
+            const currentDay = getCurrentDay();
+            const readingStatus = getReadingStatus();
+            const participantKey = `participant_${participantId}`;
+            
+            const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
+
+            if (hasRead) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> כבר קראת היום';
+                btn.className = 'btn btn-secondary btn-lg';
+                message.style.display = 'block';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> סימנתי כקראתי';
+                btn.className = 'btn btn-read btn-lg';
+                message.style.display = 'none';
+            }
+        }
+
+        // סימון שקרא
+        function markAsRead() {
+            const participantId = getCurrentParticipantId();
+            if (!participantId) {
+                alert('שגיאה: לא נמצא מזהה משתתף');
+                return;
+            }
+
+            const currentDay = getCurrentDay();
+            const readingStatus = getReadingStatus();
+            
+            const participantKey = `participant_${participantId}`;
+            if (!readingStatus[participantKey]) {
+                readingStatus[participantKey] = {};
+            }
+
+            readingStatus[participantKey][currentDay] = true;
+            setReadingStatus(readingStatus);
+
+            // עדכון כפתור
+            updateReadButton();
+
+            alert('תודה! סומן שקראת את הפרקים של היום ✨');
+        }
+
+        // עדכון תצוגת יום נוכחי
+        function updateCurrentDayDisplay() {
+            const elements = document.querySelectorAll('#currentDayDisplay');
+            const currentDay = getCurrentDay();
+            
+            elements.forEach(element => {
+                element.textContent = currentDay;
+            });
+
+            const chaptersElement = document.getElementById('currentChapters');
+            if (chaptersElement) {
+                chaptersElement.textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
+            }
+        }
+
+        // ייצוא נתונים
         function exportData() {
             const participants = getParticipants();
             const readingStatus = getReadingStatus();
             const currentDay = getCurrentDay();
-            
-            const exportData = {
-                timestamp: new Date().toISOString(),
-                currentDay: currentDay,
+
+            const data = {
                 participants: participants,
-                readingStatus: readingStatus
+                readingStatus: readingStatus,
+                currentDay: currentDay,
+                exportDate: new Date().toISOString()
             };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
             
-            const jsonString = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            URL.revokeObjectURL(url);
-            alert('הנתונים יוצאו בהצלחה!');
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
         }
 
-        // פונקציות אירועים
-        function setupEventListeners() {
-            // כפתורי שליטה על ימים
-            const nextDayBtn = document.getElementById('nextDayBtn');
-            const prevDayBtn = document.getElementById('prevDayBtn');
-            const changeDayBtn = document.getElementById('changeDayBtn');
-            const resetReadingDataBtn = document.getElementById('resetReadingDataBtn');
-            
-            if (nextDayBtn) nextDayBtn.addEventListener('click', nextDay);
-            if (prevDayBtn) prevDayBtn.addEventListener('click', prevDay);
-            if (changeDayBtn) changeDayBtn.addEventListener('click', changeToSpecificDay);
-            if (resetReadingDataBtn) resetReadingDataBtn.addEventListener('click', resetAllReadingData);
-
-            // כפתורי ניהול
-            const manageParticipantsBtn = document.getElementById('manageParticipantsBtn');
-            const hideParticipantsBtn = document.getElementById('hideParticipantsBtn');
-            const addParticipantBtn = document.getElementById('addParticipantBtn');
-            const exportDataBtn = document.getElementById('exportDataBtn');
-            
-            if (manageParticipantsBtn) {
-                manageParticipantsBtn.addEventListener('click', () => {
-                    document.getElementById('participantsManagement').style.display = 'block';
-                });
-            }
-            
-            if (hideParticipantsBtn) {
-                hideParticipantsBtn.addEventListener('click', () => {
-                    document.getElementById('participantsManagement').style.display = 'none';
-                });
-            }
-            
-            if (addParticipantBtn) addParticipantBtn.addEventListener('click', addParticipant);
-            if (exportDataBtn) exportDataBtn.addEventListener('click', exportData);
-
-            // כפתורי משתתפים
-            const markAsReadBtn = document.getElementById('markAsReadBtn');
-            const viewProgressBtn = document.getElementById('viewProgressBtn');
-            const backToReadingBtn = document.getElementById('backToReadingBtn');
-            
-            if (markAsReadBtn) markAsReadBtn.addEventListener('click', markAsRead);
-            if (viewProgressBtn) viewProgressBtn.addEventListener('click', showProgressView);
-            if (backToReadingBtn) backToReadingBtn.addEventListener('click', hideProgressView);
-
-            // אנטר בשדות הוספת משתתף
-            const nameInput = document.getElementById('newParticipantName');
-            const phoneInput = document.getElementById('newParticipantPhone');
-            
-            if (nameInput) {
-                nameInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') addParticipant();
-                });
-            }
-            
-            if (phoneInput) {
-                phoneInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') addParticipant();
-                });
-            }
-        }
-
-        // פונקציה ראשית
-        function initializeApp() {
+        // אירועי לחיצה
+        document.addEventListener('DOMContentLoaded', function() {
             // בדיקת מצב האפליקציה
             if (isAdmin()) {
-                // תצוגת אדמין
                 document.getElementById('adminView').style.display = 'block';
                 document.getElementById('participantView').style.display = 'none';
                 
+                // עדכון תצוגות אדמין
+                updateCurrentDayDisplay();
                 updateDaySelectOptions();
-                updateParticipantsList();
                 showProgress();
                 showWhatsAppList();
                 showManualTrackingList();
-            } else {
-                // תצוגת משתתף
-                const participantId = getCurrentParticipantId();
+                updateParticipantsList();
                 
-                if (participantId) {
-                    document.getElementById('adminView').style.display = 'none';
-                    document.getElementById('participantView').style.display = 'block';
-                    showTodayChapters();
-                } else {
-                    // אין מזהה משתתף - הצגת הודעת שגיאה
-                    document.getElementById('participantView').innerHTML = `
-                        <div class="alert alert-warning text-center">
-                            <h4><i class="fas fa-exclamation-triangle"></i> שגיאה בקישור</h4>
-                            <p>קישור לא תקין. אנא פנה למנהל הקבוצה לקבלת קישור נכון.</p>
-                        </div>
-                    `;
-                }
+            } else if (isProgressView()) {
+                showProgressView();
+            } else {
+                // משתתף רגיל
+                showTodayChapters();
+                updateReadButton();
+                updateCurrentDayDisplay();
             }
-            
-            // עדכון תצוגת היום הנוכחי
-            updateCurrentDayDisplay();
-            
-            // הגדרת מאזיני אירועים
-            setupEventListeners();
-        }
 
-        // הפעלת האפליקציה כשהדף נטען
-        document.addEventListener('DOMContentLoaded', initializeApp);
+            // כפתורי יום
+            document.getElementById('nextDayBtn')?.addEventListener('click', nextDay);
+            document.getElementById('prevDayBtn')?.addEventListener('click', prevDay);
+            document.getElementById('changeDayBtn')?.addEventListener('click', changeToSpecificDay);
+            document.getElementById('resetReadingDataBtn')?.addEventListener('click', resetAllReadingData);
+
+            // כפתורי ניהול משתתפים
+            document.getElementById('addParticipantBtn')?.addEventListener('click', addParticipant);
+            document.getElementById('manageParticipantsBtn')?.addEventListener('click', function() {
+                const panel = document.getElementById('participantsManagement');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+            document.getElementById('hideParticipantsBtn')?.addEventListener('click', function() {
+                document.getElementById('participantsManagement').style.display = 'none';
+            });
+
+            // כפתורי אחרים
+            document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
+            document.getElementById('markAsReadBtn')?.addEventListener('click', markAsRead);
+            document.getElementById('viewProgressBtn')?.addEventListener('click', showProgressView);
+            document.getElementById('backToReadingBtn')?.addEventListener('click', hideProgressView);
+        });
     </script>
 </body>
 </html>
