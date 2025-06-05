@@ -31,16 +31,18 @@
             padding: 30px;
         }
         .chapter-card {
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 25px;
             margin: 15px 0;
             transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
         }
         .chapter-card:hover {
-            border-color: #4CAF50;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            border-color: #45a049;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
         }
         .btn-read {
             background: #4CAF50;
@@ -405,6 +407,21 @@
             return urlParams.get('progress') === 'true';
         }
 
+        // חישוב פרקים אישיים לכל משתתף
+        function getParticipantChapters(participantId, currentDay) {
+            const participants = getParticipants();
+            if (participants.length === 0) return CHAPTERS_PER_DAY[currentDay];
+            
+            // מציאת מיקום המשתתף ברשימה (index)
+            const participantIndex = participants.findIndex(p => p.id === participantId);
+            if (participantIndex === -1) return CHAPTERS_PER_DAY[currentDay];
+            
+            // חישוב איזה יום בסיבוב הוא צריך לקרוא
+            const participantDay = ((currentDay - 1 + participantIndex) % 30) + 1;
+            
+            return CHAPTERS_PER_DAY[participantDay];
+        }
+
         // עיגולי התקדמות
         function updateProgressCircle(circleId, percentage, color = '#4CAF50') {
             const circle = document.getElementById(circleId);
@@ -604,13 +621,17 @@
             }
             
             let html = '';
-            participants.forEach(participant => {
+            participants.forEach((participant, index) => {
+                const currentDay = getCurrentDay();
+                const participantChapters = getParticipantChapters(participant.id, currentDay);
+                
                 html += `
                     <div class="participant-item">
                         <div class="row align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <strong>${participant.name}</strong><br>
-                                <small class="text-muted">${participant.phone}</small>
+                                <small class="text-muted">${participant.phone}</small><br>
+                                <small class="text-info">פרקים היום: ${participantChapters}</small>
                             </div>
                             <div class="col-md-3">
                                 <small class="text-muted">ID: ${participant.id}</small><br>
@@ -618,7 +639,7 @@
                                     <small>קישור אישי</small>
                                 </a>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <button class="btn btn-danger btn-sm w-100" onclick="removeParticipant(${participant.id})">
                                     <i class="fas fa-trash"></i> מחק
                                 </button>
@@ -667,19 +688,48 @@
             }
         }
 
-        // הצגת פרקי היום
+        // הצגת פרקי היום עם עיצוב חמוד
         function showTodayChapters() {
             const currentDay = getCurrentDay();
-            const chaptersText = CHAPTERS_PER_DAY[currentDay];
+            const participantId = getCurrentParticipantId();
             const container = document.getElementById('todayChapters');
             
             if (!container) return;
             
+            // חישוב פרקים אישיים
+            const participantChapters = getParticipantChapters(participantId, currentDay);
+            
+            // מציאת שם המשתתף
+            let participantName = 'חבר יקר';
+            if (participantId) {
+                const participants = getParticipants();
+                const participant = participants.find(p => p.id === participantId);
+                if (participant) {
+                    participantName = participant.name;
+                }
+            }
+            
+            // תאריך היום
+            const today = new Date();
+            const hebrewDate = today.toLocaleDateString('he-IL', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
             container.innerHTML = `
-                <div class="chapter-card">
-                    <h4><i class="fas fa-book"></i> פרקי היום</h4>
-                    <h2 class="text-primary">תהילים ${chaptersText}</h2>
-                    <p class="text-muted">יום ${currentDay} מתוך ${TOTAL_DAYS}</p>
+                <div class="chapter-card text-center">
+                    <h3>📖 שלום ${participantName}!</h3>
+                    
+                    <p class="mb-2">🗓 היום ${hebrewDate}</p>
+                    <p class="mb-3">📊 יום ${currentDay} במחזור התהילים</p>
+                    
+                    <div class="my-4">
+                        <h4 class="text-primary">📜 החלק שלך להיום: פרקים ${participantChapters}</h4>
+                    </div>
+                    
+                    <p class="text-success"><strong>🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨</strong></p>
                 </div>
             `;
         }
@@ -796,14 +846,13 @@
             `;
         }
 
-        // הצגת רשימת הודעות WhatsApp
+        // הצגת רשימת הודעות WhatsApp עם פרקים אישיים
         function showWhatsAppList() {
             const container = document.getElementById('whatsappList');
             if (!container) return;
             
             const participants = getParticipants();
             const currentDay = getCurrentDay();
-            const chaptersText = CHAPTERS_PER_DAY[currentDay];
             
             if (participants.length === 0) {
                 container.innerHTML = `
@@ -822,12 +871,26 @@
                 const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
                 const statusIcon = hasRead ? '✅' : '⏳';
                 
-                // יצירת הודעה אישית
+                // חישוב פרקים אישיים
+                const participantChapters = getParticipantChapters(participant.id, currentDay);
+                
+                // תאריך היום
+                const today = new Date();
+                const hebrewDate = today.toLocaleDateString('he-IL', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // יצירת הודעה אישית עם עיצוב חמוד
                 const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
-                let message = `🙏 שלום ${participant.name}!\n\n`;
-                message += `📅 תהילים קבוצתי - יום ${currentDay}\n`;
-                message += `📖 פרקים ${chaptersText}\n\n`;
+                let message = `📖 שלום ${participant.name}!\n\n`;
+                message += `🗓 היום ${hebrewDate}\n`;
+                message += `📊 יום ${currentDay} במחזור התהילים\n\n`;
+                message += `📜 החלק שלך להיום: פרקים ${participantChapters}\n\n`;
                 message += `🔗 הקישור האישי שלך:\n${personalLink}\n\n`;
+                message += `🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨\n\n`;
                 message += `תזכה למצוות! 💙`;
                 
                 const whatsappUrl = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
@@ -837,7 +900,8 @@
                         <div class="row align-items-center">
                             <div class="col-md-5">
                                 <strong>${participant.name}</strong><br>
-                                <small class="text-muted">${participant.phone}</small>
+                                <small class="text-muted">${participant.phone}</small><br>
+                                <small class="text-info">פרקים: ${participantChapters}</small>
                             </div>
                             <div class="col-md-3 text-center">
                                 <span class="badge status-badge ${hasRead ? 'bg-success' : 'bg-warning'}">${statusIcon} ${hasRead ? 'קרא' : 'לא קרא'}</span>
@@ -858,7 +922,7 @@
                     <button id="sendToAllBtn" class="btn btn-primary btn-lg">
                         <i class="fab fa-whatsapp"></i> שלח לכולם (${participants.length} טאבים)
                     </button>
-                    <br><small class="text-muted mt-2 d-block">יפתח טאב נפרד לכל משתתף</small>
+                    <br><small class="text-muted mt-2 d-block">יפתח טאב נפרד לכל משתתף עם הפרקים האישיים שלו</small>
                 </div>
             `;
             
@@ -871,28 +935,41 @@
             }
         }
 
-        // שליחה לכולם
+        // שליחה לכולם עם פרקים אישיים
         function sendToAll() {
             const participants = getParticipants();
             const currentDay = getCurrentDay();
-            const chaptersText = CHAPTERS_PER_DAY[currentDay];
             
             if (participants.length === 0) {
                 alert('אין משתתפים רשומים');
                 return;
             }
             
-            if (!confirm(`לשלוח הודעות ל-${participants.length} משתתפים?\n(יפתח ${participants.length} טאבים)`)) {
+            if (!confirm(`לשלוח הודעות ל-${participants.length} משתתפים?\n(יפתח ${participants.length} טאבים עם פרקים אישיים)`)) {
                 return;
             }
             
             participants.forEach((participant, index) => {
                 setTimeout(() => {
+                    // חישוב פרקים אישיים
+                    const participantChapters = getParticipantChapters(participant.id, currentDay);
+                    
+                    // תאריך היום
+                    const today = new Date();
+                    const hebrewDate = today.toLocaleDateString('he-IL', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
                     const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
-                    let message = `🙏 שלום ${participant.name}!\n\n`;
-                    message += `📅 תהילים קבוצתי - יום ${currentDay}\n`;
-                    message += `📖 פרקים ${chaptersText}\n\n`;
+                    let message = `📖 שלום ${participant.name}!\n\n`;
+                    message += `🗓 היום ${hebrewDate}\n`;
+                    message += `📊 יום ${currentDay} במחזור התהילים\n\n`;
+                    message += `📜 החלק שלך להיום: פרקים ${participantChapters}\n\n`;
                     message += `🔗 הקישור האישי שלך:\n${personalLink}\n\n`;
+                    message += `🤝 אם כולם יקראו - נשלים יחד את כל התהילים היום! ✨\n\n`;
                     message += `תזכה למצוות! 💙`;
                     
                     const whatsappUrl = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
@@ -900,29 +977,27 @@
                 }, index * 500); // השהייה של חצי שנייה בין הודעות
             });
             
-            alert(`נפתחו ${participants.length} טאבים של WhatsApp!`);
+            alert(`נפתחו ${participants.length} טאבים של WhatsApp עם הודעות אישיות!`);
         }
 
-        // ייצוא נתונים
-        function exportData() {
-            const participants = getParticipants();
-            const readingStatus = getReadingStatus();
+        // שיתוף WhatsApp כללי
+        function shareOnWhatsApp() {
             const currentDay = getCurrentDay();
+            const participantId = getCurrentParticipantId();
             
-            const data = {
-                participants,
-                readingStatus,
-                currentDay,
-                exportDate: new Date().toISOString()
-            };
+            // חישוב פרקים אישיים
+            const participantChapters = getParticipantChapters(participantId, currentDay);
             
-            const dataStr = JSON.stringify(data, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            let message = `📖 תהילים קבוצתי - יום ${currentDay}\n`;
+            message += `📜 פרקים ${participantChapters}\n\n`;
+            message += `הצטרפו לקריאה: ${window.location.origin}${window.location.pathname}`;
             
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
+            if (participantId) {
+                message += `?participant=${participantId}`;
+            }
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         // איפוס מחזור
@@ -942,12 +1017,32 @@
             location.reload();
         }
 
+        // ייצוא נתונים
+        function exportData() {
+            const data = {
+                participants: getParticipants(),
+                currentDay: getCurrentDay(),
+                readingStatus: getReadingStatus(),
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tehillim-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         // אתחול select של ימים
         function initDaySelect() {
             const select = document.getElementById('daySelect');
-            const currentDay = getCurrentDay();
-            
             if (!select) return;
+            
+            const currentDay = getCurrentDay();
             
             for (let i = 1; i <= TOTAL_DAYS; i++) {
                 const option = document.createElement('option');
@@ -961,12 +1056,6 @@
         // אתחול האפליקציה
         function init() {
             updateCurrentDayDisplay();
-            
-            // בדיקת מצב תצוגה
-            if (isProgressView() && getCurrentParticipantId()) {
-                showProgressView();
-                return;
-            }
             
             if (isAdmin()) {
                 document.getElementById('adminView').style.display = 'block';
@@ -983,66 +1072,54 @@
             
             // Event listeners
             const markAsReadBtn = document.getElementById('markAsReadBtn');
+            const viewProgressBtn = document.getElementById('viewProgressBtn');
+            const backToReadingBtn = document.getElementById('backToReadingBtn');
+            
             if (markAsReadBtn) {
                 markAsReadBtn.addEventListener('click', markAsRead);
             }
             
-            const viewProgressBtn = document.getElementById('viewProgressBtn');
             if (viewProgressBtn) {
-                viewProgressBtn.addEventListener('click', () => {
-                    const participantId = getCurrentParticipantId();
-                    if (participantId) {
-                        window.location.href = `${window.location.pathname}?participant=${participantId}&progress=true`;
-                    } else {
-                        showProgressView();
-                    }
-                });
+                viewProgressBtn.addEventListener('click', showProgressView);
             }
             
-            const backToReadingBtn = document.getElementById('backToReadingBtn');
             if (backToReadingBtn) {
-                backToReadingBtn.addEventListener('click', () => {
-                    const participantId = getCurrentParticipantId();
-                    if (participantId) {
-                        window.location.href = `${window.location.pathname}?participant=${participantId}`;
-                    } else {
-                        hideProgressView();
-                    }
-                });
+                backToReadingBtn.addEventListener('click', hideProgressView);
             }
             
             if (isAdmin()) {
                 const resetCycleBtn = document.getElementById('resetCycleBtn');
+                const changeDayBtn = document.getElementById('changeDayBtn');
+                const manageParticipantsBtn = document.getElementById('manageParticipantsBtn');
+                const hideParticipantsBtn = document.getElementById('hideParticipantsBtn');
+                const addParticipantBtn = document.getElementById('addParticipantBtn');
+                const exportDataBtn = document.getElementById('exportDataBtn');
+                
                 if (resetCycleBtn) {
                     resetCycleBtn.addEventListener('click', resetCycle);
                 }
                 
-                const changeDayBtn = document.getElementById('changeDayBtn');
                 if (changeDayBtn) {
                     changeDayBtn.addEventListener('click', changeDay);
                 }
                 
-                const manageParticipantsBtn = document.getElementById('manageParticipantsBtn');
                 if (manageParticipantsBtn) {
                     manageParticipantsBtn.addEventListener('click', showParticipantsManagement);
                 }
                 
-                const hideParticipantsBtn = document.getElementById('hideParticipantsBtn');
                 if (hideParticipantsBtn) {
                     hideParticipantsBtn.addEventListener('click', hideParticipantsManagement);
                 }
                 
-                const addParticipantBtn = document.getElementById('addParticipantBtn');
                 if (addParticipantBtn) {
                     addParticipantBtn.addEventListener('click', addParticipant);
                 }
                 
-                const exportDataBtn = document.getElementById('exportDataBtn');
                 if (exportDataBtn) {
                     exportDataBtn.addEventListener('click', exportData);
                 }
                 
-                // Event listeners לשדות הטופס
+                // Event listeners לשדות קלט
                 const nameField = document.getElementById('newParticipantName');
                 const phoneField = document.getElementById('newParticipantPhone');
                 
