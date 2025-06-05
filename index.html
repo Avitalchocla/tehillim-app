@@ -171,6 +171,13 @@
                 gap: 20px;
             }
         }
+        .day-control-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -189,7 +196,7 @@
             <!-- מידע על היום הנוכחי -->
             <div class="day-info">
                 <h3>יום <span id="currentDayDisplay">1</span> במחזור</h3>
-                <p id="currentChapters" class="mb-0">פרקים א-ט</p>
+                <p id="currentChapters" class="mb-0">מחזור תהילים משותף</p>
             </div>
 
             <!-- עמוד מעקב התקדמות -->
@@ -255,6 +262,41 @@
 
             <!-- פאנל ניהול עבור אדמין -->
             <div id="adminView" style="display: none;">
+                <!-- שליטה על ימים -->
+                <div class="day-control-panel">
+                    <h4><i class="fas fa-calendar-alt"></i> שליטה על ימי המחזור</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button id="nextDayBtn" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-forward"></i> עבור ליום הבא
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="prevDayBtn" class="btn btn-warning w-100 mb-2">
+                                <i class="fas fa-backward"></i> חזור ליום הקודם
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="resetReadingDataBtn" class="btn btn-danger w-100 mb-2">
+                                <i class="fas fa-trash-alt"></i> איפוס נתוני קריאה
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label for="daySelect" class="form-label">קפיצה ליום ספציפי:</label>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select id="daySelect" class="form-select">
+                                    <!-- יתווספו אופציות ב-JS -->
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button id="changeDayBtn" class="btn btn-info w-100">קפוץ ליום</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="admin-panel">
                     <h4><i class="fas fa-cogs"></i> פאנל ניהול</h4>
                     
@@ -262,29 +304,16 @@
                     <div id="progress" class="mb-4"></div>
                     
                     <div class="row">
-                        <div class="col-md-4">
-                            <button id="resetCycleBtn" class="btn btn-warning w-100 mb-2">
-                                <i class="fas fa-redo"></i> איפוס מחזור חדש
-                            </button>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <button id="manageParticipantsBtn" class="btn btn-primary w-100 mb-2">
                                 <i class="fas fa-users"></i> ניהול משתתפים
                             </button>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <button id="exportDataBtn" class="btn btn-info w-100 mb-2">
                                 <i class="fas fa-download"></i> ייצוא נתונים
                             </button>
                         </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <label for="daySelect" class="form-label">עבור ליום:</label>
-                        <select id="daySelect" class="form-select">
-                            <!-- יתווספו אופציות ב-JS -->
-                        </select>
-                        <button id="changeDayBtn" class="btn btn-info mt-2 w-100">שנה יום</button>
                     </div>
                 </div>
 
@@ -418,6 +447,82 @@
             const participantDay = ((currentDay - 1 + participantIndex) % 30) + 1;
             
             return CHAPTERS_PER_DAY[participantDay];
+        }
+
+        // שליטה על ימים
+        function nextDay() {
+            const currentDay = getCurrentDay();
+            const newDay = currentDay >= 30 ? 1 : currentDay + 1;
+            setCurrentDay(newDay);
+            
+            // עדכון כל התצוגות
+            updateCurrentDayDisplay();
+            updateDaySelectOptions();
+            showTodayChapters();
+            updateParticipantsList();
+            showProgress();
+            showWhatsAppList();
+            
+            alert(`עברנו ליום ${newDay} במחזור!`);
+        }
+
+        function prevDay() {
+            const currentDay = getCurrentDay();
+            const newDay = currentDay <= 1 ? 30 : currentDay - 1;
+            setCurrentDay(newDay);
+            
+            // עדכון כל התצוגות
+            updateCurrentDayDisplay();
+            updateDaySelectOptions();
+            showTodayChapters();
+            updateParticipantsList();
+            showProgress();
+            showWhatsAppList();
+            
+            alert(`חזרנו ליום ${newDay} במחזור!`);
+        }
+
+        function changeToSpecificDay() {
+            const selectedDay = parseInt(document.getElementById('daySelect').value);
+            setCurrentDay(selectedDay);
+            
+            // עדכון כל התצוגות
+            updateCurrentDayDisplay();
+            updateDaySelectOptions();
+            showTodayChapters();
+            updateParticipantsList();
+            showProgress();
+            showWhatsAppList();
+            
+            alert(`קפצנו ליום ${selectedDay} במחזור!`);
+        }
+
+        function resetAllReadingData() {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל נתוני הקריאה?\n\nפעולה זו תמחק את כל האישורים שהמשתתפים נתנו עד כה.\n\nפעולה זו לא ניתנת לביטול!')) {
+                localStorage.removeItem('tehillim_reading_status');
+                
+                // עדכון תצוגות
+                showProgress();
+                showWhatsAppList();
+                updateReadButton();
+                
+                alert('כל נתוני הקריאה נמחקו בהצלחה!\nכעת כל המשתתפים יכולים לאשר קריאה מחדש.');
+            }
+        }
+
+        function updateDaySelectOptions() {
+            const select = document.getElementById('daySelect');
+            if (!select) return;
+            
+            const currentDay = getCurrentDay();
+            let html = '';
+            
+            for (let day = 1; day <= TOTAL_DAYS; day++) {
+                const selected = day === currentDay ? 'selected' : '';
+                html += `<option value="${day}" ${selected}>יום ${day} - פרקים ${CHAPTERS_PER_DAY[day]}</option>`;
+            }
+            
+            select.innerHTML = html;
         }
 
         // עיגולי התקדמות
@@ -675,33 +780,54 @@
         // עדכון תצוגת יום נוכחי
         function updateCurrentDayDisplay() {
             const currentDay = getCurrentDay();
+            const participantId = getCurrentParticipantId();
+            
             const currentDayDisplay = document.getElementById('currentDayDisplay');
             const currentChapters = document.getElementById('currentChapters');
             
             if (currentDayDisplay) {
                 currentDayDisplay.textContent = currentDay;
             }
+            
             if (currentChapters) {
-                currentChapters.textContent = `פרקים ${CHAPTERS_PER_DAY[currentDay]}`;
+                // אם יש משתתף - הצג פרקים אישיים
+                if (participantId) {
+                    const personalChapters = getParticipantChapters(participantId, currentDay);
+                    currentChapters.textContent = `פרקים ${personalChapters}`;
+                } else {
+                    // אם אין משתתף - הצג כללי
+                    currentChapters.textContent = `מחזור תהילים משותף`;
+                }
             }
         }
 
-        // הצגת פרקי היום - פשוט בעמוד
+        // הצגת פרקי היום
         function showTodayChapters() {
             const currentDay = getCurrentDay();
-            const participantId = getCurrentParticipantId();
             const container = document.getElementById('todayChapters');
+            const participantId = getCurrentParticipantId();
             
             if (!container) return;
             
-            // חישוב פרקים אישיים
-            const participantChapters = getParticipantChapters(participantId, currentDay);
+            // מציאת שם המשתתף ופרקים אישיים
+            let participantName = 'חבר יקר';
+            let chaptersText = CHAPTERS_PER_DAY[currentDay];
+            
+            if (participantId) {
+                const participants = getParticipants();
+                const participant = participants.find(p => p.id === participantId);
+                if (participant) {
+                    participantName = participant.name;
+                }
+                chaptersText = getParticipantChapters(participantId, currentDay);
+            }
             
             container.innerHTML = `
                 <div class="chapter-card">
                     <h4><i class="fas fa-book"></i> פרקי היום שלך</h4>
-                    <h2 class="text-primary">תהילים ${participantChapters}</h2>
+                    <h2 class="text-primary">תהילים ${chaptersText}</h2>
                     <p class="text-muted">יום ${currentDay} מתוך ${TOTAL_DAYS}</p>
+                    ${participantId ? `<p class="text-success"><strong>שלום ${participantName}!</strong></p>` : ''}
                 </div>
             `;
         }
@@ -818,7 +944,7 @@
             `;
         }
 
-        // הצגת רשימת הודעות WhatsApp עם עיצוב חמוד
+        // הצגת רשימת הודעות WhatsApp
         function showWhatsAppList() {
             const container = document.getElementById('whatsappList');
             if (!container) return;
@@ -845,6 +971,8 @@
                 
                 // חישוב פרקים אישיים לכל משתתף
                 const participantChapters = getParticipantChapters(participant.id, currentDay);
+                
+                // יצירת הודעה אישית עם עיצוב חמוד
                 const personalLink = `${window.location.origin}${window.location.pathname}?participant=${participant.id}`;
                 
                 // תאריך היום
@@ -855,7 +983,6 @@
                     month: 'long'
                 });
                 
-                // יצירת הודעה אישית עם עיצוב חמוד
                 let message = `📖 שלום ${participant.name}!\n\n`;
                 message += `🗓 היום ${hebrewDate}\n`;
                 message += `📊 יום ${currentDay} במחזור התהילים\n\n`;
@@ -879,7 +1006,7 @@
                             </div>
                             <div class="col-md-5">
                                 <a href="${whatsappUrl}" target="_blank" class="btn btn-success btn-sm w-100">
-                                    <i class="fab fa-whatsapp"></i> שלח הודעה עם פרקים אישיים
+                                    <i class="fab fa-whatsapp"></i> שלח הודעה אישית
                                 </a>
                             </div>
                         </div>
@@ -891,22 +1018,22 @@
             html += `
                 <div class="text-center mt-3">
                     <button id="sendToAllBtn" class="btn btn-primary btn-lg">
-                        <i class="fab fa-whatsapp"></i> שלח לכולם פרקים אישיים (${participants.length} טאבים)
+                        <i class="fab fa-whatsapp"></i> שלח לכולם (${participants.length} טאבים)
                     </button>
-                    <br><small class="text-muted mt-2 d-block">יפתח טאב נפרד לכל משתתף עם הפרקים האישיים שלו</small>
+                    <br><small class="text-muted mt-2 d-block">יפתח טאב נפרד לכל משתתף</small>
                 </div>
             `;
             
             container.innerHTML = html;
             
-            // Event listener לכפתור שליחה לכולם
+            // הוספת event listener לכפתור שליחה לכולם
             const sendToAllButton = document.getElementById('sendToAllBtn');
             if (sendToAllButton) {
                 sendToAllButton.addEventListener('click', sendToAll);
             }
         }
 
-        // שליחה לכולם עם פרקים אישיים
+        // שליחה לכולם
         function sendToAll() {
             const participants = getParticipants();
             const currentDay = getCurrentDay();
@@ -916,10 +1043,11 @@
                 return;
             }
             
-            if (!confirm(`לשלוח הודעות אישיות ל-${participants.length} משתתפים?\n(יפתח ${participants.length} טאבים)`)) {
+            if (!confirm(`האם אתה בטוח שברצונך לשלוח הודעה ל-${participants.length} משתתפים?\n\nזה יפתח ${participants.length} טאבים בדפדפן.`)) {
                 return;
             }
             
+            // פתיחת טאב לכל משתתף
             participants.forEach((participant, index) => {
                 setTimeout(() => {
                     const participantChapters = getParticipantChapters(participant.id, currentDay);
@@ -942,77 +1070,24 @@
                     message += `תזכה למצוות! 💙`;
                     
                     const whatsappUrl = `https://wa.me/${participant.phone}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, `whatsapp${index}`);
-                }, index * 500); // השהייה של חצי שנייה בין הודעות
+                    window.open(whatsappUrl, '_blank');
+                }, index * 500); // הפסקה של חצי שנייה בין כל פתיחה
             });
             
-            alert(`נפתח ${participants.length} טאבים עם הודעות אישיות!`);
+            alert(`נפתחו ${participants.length} טאבים לשליחת הודעות WhatsApp!`);
         }
 
-        // פונקציות ניווט
-        function populateDaySelect() {
-            const select = document.getElementById('daySelect');
-            if (!select) return;
-            
-            select.innerHTML = '';
-            for (let day = 1; day <= TOTAL_DAYS; day++) {
-                const option = document.createElement('option');
-                option.value = day;
-                option.textContent = `יום ${day} - ${CHAPTERS_PER_DAY[day]}`;
-                if (day === getCurrentDay()) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            }
-        }
-
-        function changeDay() {
-            const select = document.getElementById('daySelect');
-            if (!select) return;
-            
-            const newDay = parseInt(select.value);
-            if (newDay && newDay >= 1 && newDay <= TOTAL_DAYS) {
-                setCurrentDay(newDay);
-                updateCurrentDayDisplay();
-                showTodayChapters();
-                updateReadButton();
-                showProgress();
-                showWhatsAppList();
-                alert(`עברנו ליום ${newDay}`);
-            }
-        }
-
-        function resetCycle() {
-            if (!confirm('האם אתה בטוח שברצונך לאפס את המחזור?\nזה ימחק את כל נתוני הקריאה!')) {
-                return;
-            }
-            
-            // איפוס היום ל-1
-            setCurrentDay(1);
-            
-            // איפוס כל נתוני הקריאה
-            setReadingStatus({});
-            
-            // עדכון תצוגה
-            updateCurrentDayDisplay();
-            showTodayChapters();
-            updateReadButton();
-            showProgress();
-            showWhatsAppList();
-            populateDaySelect();
-            
-            alert('המחזור אופס בהצלחה! התחלנו מחדש ביום 1');
-        }
-
+        // ייצוא נתונים
         function exportData() {
             const data = {
-                participants: getParticipants(),
                 currentDay: getCurrentDay(),
+                participants: getParticipants(),
                 readingStatus: getReadingStatus(),
                 exportDate: new Date().toISOString()
             };
             
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             
             const a = document.createElement('a');
@@ -1023,49 +1098,34 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            alert('הנתונים יוצאו בהצלחה!');
+            alert('נתונים יוצאו בהצלחה!');
         }
 
         // אתחול האפליקציה
         function initializeApp() {
             updateCurrentDayDisplay();
+            updateDaySelectOptions();
             
             if (isAdmin()) {
                 // תצוגת אדמין
                 document.getElementById('adminView').style.display = 'block';
                 document.getElementById('participantView').style.display = 'none';
                 
-                populateDaySelect();
                 showProgress();
                 showWhatsAppList();
                 updateParticipantsList();
                 
-                // Event listeners לאדמין
-                document.getElementById('resetCycleBtn')?.addEventListener('click', resetCycle);
-                document.getElementById('manageParticipantsBtn')?.addEventListener('click', showParticipantsManagement);
-                document.getElementById('hideParticipantsBtn')?.addEventListener('click', hideParticipantsManagement);
-                document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
-                document.getElementById('changeDayBtn')?.addEventListener('click', changeDay);
-                document.getElementById('addParticipantBtn')?.addEventListener('click', addParticipant);
+                // Event listeners לכפתורי אדמין
+                document.getElementById('nextDayBtn').addEventListener('click', nextDay);
+                document.getElementById('prevDayBtn').addEventListener('click', prevDay);
+                document.getElementById('changeDayBtn').addEventListener('click', changeToSpecificDay);
+                document.getElementById('resetReadingDataBtn').addEventListener('click', resetAllReadingData);
+                document.getElementById('manageParticipantsBtn').addEventListener('click', showParticipantsManagement);
+                document.getElementById('hideParticipantsBtn').addEventListener('click', hideParticipantsManagement);
+                document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
+                document.getElementById('exportDataBtn').addEventListener('click', exportData);
                 
-                // Enter בשדות הוספת משתתף
-                document.getElementById('newParticipantName')?.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') addParticipant();
-                });
-                document.getElementById('newParticipantPhone')?.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') addParticipant();
-                });
-                
-            } else if (isProgressView()) {
-                // תצוגת מעקב התקדמות
-                showProgressView();
-                
-                // Event listener לחזרה
-                document.getElementById('backToReadingBtn')?.addEventListener('click', () => {
-                    window.location.href = window.location.pathname + '?participant=' + getCurrentParticipantId();
-                });
-                
-            } else {
+            } else if (getCurrentParticipantId()) {
                 // תצוגת משתתף רגיל
                 document.getElementById('adminView').style.display = 'none';
                 document.getElementById('participantView').style.display = 'block';
@@ -1074,8 +1134,19 @@
                 updateReadButton();
                 
                 // Event listeners למשתתף
-                document.getElementById('markAsReadBtn')?.addEventListener('click', markAsRead);
-                document.getElementById('viewProgressBtn')?.addEventListener('click', showProgressView);
+                document.getElementById('markAsReadBtn').addEventListener('click', markAsRead);
+                document.getElementById('viewProgressBtn').addEventListener('click', showProgressView);
+                document.getElementById('backToReadingBtn').addEventListener('click', hideProgressView);
+                
+            } else {
+                // אין מזהה - הצגת הודעה
+                document.getElementById('adminView').style.display = 'none';
+                document.getElementById('participantView').innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <h4><i class="fas fa-info-circle"></i> ברוכים הבאים לתהילים קבוצתי</h4>
+                        <p>אנא השתמש בקישור האישי שלך או בקישור האדמין</p>
+                    </div>
+                `;
             }
         }
 
