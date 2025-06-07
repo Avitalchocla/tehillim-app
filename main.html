@@ -326,7 +326,7 @@
         function getParticipantChapters(participantId, day) {
             // אם אין משתתפים, אין טעם לחשב
             if (participants.length === 0) {
-                return 'אין משתתפים';
+                return 'אין פרקים';
             }
 
             // נניח שיום 30 הוא קריאת כל הספר
@@ -820,6 +820,11 @@
                 return;
             }
 
+            // תאריך לועזי
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = today.toLocaleDateString('he-IL', options); // he-IL כדי לקבל יום בשבוע בעברית
+
             let html = '';
             participants.forEach(p => {
                 const participantKey = `participant_${p.id}`;
@@ -827,14 +832,30 @@
                 const chapters = getParticipantChapters(p.id, currentDay);
                 
                 // וודא שהפרוטוקול והדומיין תקינים. עבור Github Pages או שרת מקומי.
-                // אם אתה מריץ מקובץ מקומי: location.origin יהיה "file://" וזה לא תקין.
-                // לכן נשתמש בכתובת קבועה או באופציה חכמה יותר.
                 const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
 
-                const appLink = `${baseUrl}?participant=${p.id}`;
-                const progressLink = `${baseUrl}?participant=${p.id}&progress=true`;
+                const appLink = `${baseUrl}?participant=${p.id}`; // הקישור היחיד
 
-                const whatsappMessage = `שלום ${p.name}!\nזהו יום ${currentDay} במחזור התהילים הקבוצתי.\nהפרקים שלך להיום הם פרקים ${chapters}.\n\nלאחר שקראת, אנא אשרו בקישור הבא:\n${appLink}\n\nלצפייה בהתקדמות הקבוצתית והאישית שלך: ${progressLink}`;
+                const whatsappMessage = 
+`שלום ${p.name}!
+
+📅 ${formattedDate}
+יום ${currentDay} במחזור התהילים
+
+📖 החלק שלך להיום: פרקים ${chapters}
+
+🙏 לפני הקריאה אמרו: "לרפואת משה בן טילה"
+
+✨ אם כולם יקראו - נשלים יחד את כל התהילים היום! 🙏
+
+🔗 לצפייה בהתקדמות ולאישור קריאה:
+${appLink}
+
+📱 אם הקישור לא עובד (פלאפון כשר) - פשוט שלח חזרה: "קראתי"
+
+תזכה למצוות`;
+
+
                 const whatsappUrl = `https://wa.me/${p.phone}?text=${encodeURIComponent(whatsappMessage)}`;
 
                 html += `
