@@ -59,7 +59,7 @@
             background-color: #dc3545;
             border-color: #dc3545;
         }
-        .whatsapp-card, .manual-participant-card, .participant-item {
+        .whatsapp-card, .manual-participant-card, .participant-item, .edit-history-participant-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -70,7 +70,7 @@
             margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .whatsapp-card .status-badge, .manual-participant-card .status-badge {
+        .whatsapp-card .status-badge, .manual-participant-card .status-badge, .edit-history-participant-item .status-badge {
             margin-top: 5px;
         }
         .progress-circle {
@@ -109,6 +109,35 @@
         }
         .modal-body .form-control {
             margin-bottom: 15px;
+        }
+        /* Style for the day checkboxes in edit history */
+        .day-checkbox-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px; /* Spacing between day items */
+            justify-content: center;
+        }
+        .day-checkbox-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            width: 60px; /* Fixed width for each day item */
+            text-align: center;
+            font-size: 0.85em;
+            user-select: none; /* Prevent text selection */
+        }
+        .day-checkbox-item.checked {
+            background-color: #d4edda; /* Light green */
+            border-color: #28a745;
+        }
+        .day-checkbox-item input[type="checkbox"] {
+            margin-top: 5px;
+            transform: scale(1.2); /* Make checkbox slightly larger */
         }
     </style>
 </head>
@@ -203,10 +232,39 @@
             </div>
 
             <div class="mb-4 p-3 border rounded bg-light">
-                <h3><i class="fas fa-mobile-alt"></i> מעקב ידני לפלאפונים כשרים</h3>
+                <h3><i class="fas fa-mobile-alt"></i> מעקב ידני לפלאפונים כשרים (לשליחה היום)</h3>
                 <div id="manualTrackingList">
                     </div>
             </div>
+
+            <div class="mb-4 p-3 border rounded bg-light">
+                <h3><i class="fas fa-history"></i> עריכת ימי קריאה (היסטוריה)</h3>
+                <button id="editReadingHistoryBtn" class="btn btn-warning w-100 mb-3">
+                    <i class="fas fa-edit"></i> ערוך ימי קריאה למשתתפים
+                </button>
+                
+                <div id="editReadingHistoryPanel" style="display: none;" class="mt-3 border p-3 rounded bg-white">
+                    <h4 class="mb-3">בחר משתתף לעריכה:</h4>
+                    <div id="editHistoryParticipantsList">
+                        </div>
+                    
+                    <div id="selectedParticipantHistory" class="mt-4" style="display: none;">
+                        <h5 class="text-center mb-3">עריכת ימי קריאה עבור: <strong id="currentEditedParticipantName"></strong></h5>
+                        <div id="dayCheckboxesContainer" class="day-checkbox-container">
+                            </div>
+                        <div class="text-center mt-3">
+                            <button id="saveParticipantHistoryBtn" class="btn btn-success me-2">
+                                <i class="fas fa-save"></i> שמור שינויים
+                            </button>
+                            <button id="cancelParticipantHistoryBtn" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> בטל
+                            </button>
+                        </div>
+                    </div>
+                    <button id="hideEditHistoryBtn" class="btn btn-secondary w-100 mt-3">סגור פאנל עריכה</button>
+                </div>
+            </div>
+
 
             <div class="mb-4 p-3 border rounded bg-light">
                 <h3><i class="fab fa-whatsapp"></i> שליחת הודעות WhatsApp</h3>
@@ -311,6 +369,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has(PARTICIPANT_PARAM)) {
                 const id = parseInt(urlParams.get(PARTICIPANT_PARAM), 10);
+                // חשוב: לוודא שה-ID באמת קיים ברשימת המשתתפים הנוכחית
                 if (participants.some(p => p.id === id)) {
                     return id;
                 }
@@ -337,29 +396,21 @@
             const chapterKeys = Object.keys(CHAPTERS_PER_DAY).filter(k => k !== '30'); // פרקים 1-29
             const totalNormalChapters = chapterKeys.length;
 
-            const baseChapterIndex = (day - 1) % totalNormalChapters; // התאמה ל-0 בסיס
-
-            // הפרקים הבסיסיים ליום זה
-            const baseChapters = CHAPTERS_PER_DAY[parseInt(chapterKeys[baseChapterIndex])];
-
-            // אם אין מספיק משתתפים או שזה יום 30, כולם יקראו את אותם פרקים
-            if (participants.length === 0 || participants.length === 1) {
-                return baseChapters;
-            }
-
-            // חלוקת הפרקים לפי משתתפים
+            // חישוב מזהה הפרק המותאם למשתתף וליום
+            // זהו החישוב המבטיח שכל משתתף יקבל פרקים שונים בכל יום,
+            // תוך כדי שמירה על סדר מחזורי של הפרקים.
             const participantIndex = participants.findIndex(p => p.id === participantId);
             if (participantIndex === -1) {
                 return 'משתתף לא נמצא';
             }
 
-            const availableChapterSegments = Object.values(CHAPTERS_PER_DAY).filter((_, i) => i < 29);
-            const totalSegments = availableChapterSegments.length;
+            // השתמש במודולו כדי להבטיח שהאינדקס תמיד בטווח הפרקים 1-29
+            // המנהל בוחר את היום, וכל משתתף מקבל פרק בהתאם למיקומו ברשימה
+            const assignedChapterIndex = ((day - 1 + participantIndex) % totalNormalChapters) + 1; // +1 כי הפרקים הם 1-29
 
-            const assignedSegmentIndex = ((day - 1 + participantIndex) % totalSegments);
-
-            return availableChapterSegments[assignedSegmentIndex];
+            return CHAPTERS_PER_DAY[assignedChapterIndex];
         }
+
 
         // פונקציות עדכון ורענון
         function updateReadButton() {
@@ -369,14 +420,18 @@
 
             if (!markAsReadBtn || !completionMessage) return;
 
+            // אם אין משתתף מזוהה, הסתר את הכפתורים
             if (participantId === null) {
                 markAsReadBtn.style.display = 'none';
                 completionMessage.style.display = 'none';
                 return;
             }
-
+            
+            // --- הבדיקה הזו קריטית לוודא שהסטטוס נטען נכון ---
             const participantKey = `participant_${participantId}`;
-            if (readingStatus[participantKey] && readingStatus[participantKey][currentDay]) {
+            const hasRead = readingStatus[participantKey] && readingStatus[participantKey][currentDay];
+
+            if (hasRead) {
                 markAsReadBtn.textContent = '✓ סומן כקראתי היום';
                 markAsReadBtn.classList.remove('btn-success');
                 markAsReadBtn.classList.add('btn-secondary');
@@ -395,18 +450,31 @@
             const participantId = getCurrentParticipantId();
             if (participantId === null) {
                 alert('שגיאה: לא נמצא מזהה משתתף. לא ניתן לסמן כקרא.');
+                console.error('markReadStatusForParticipant: participantId is null');
                 return;
             }
 
             const participantKey = `participant_${participantId}`;
+            
+            // וודא שהאובייקט קיים עבור המשתתף
             if (!readingStatus[participantKey]) {
                 readingStatus[participantKey] = {};
             }
+            
+            // סמן את היום הנוכחי כקרא
             readingStatus[participantKey][currentDay] = true;
+            
+            // שמור את הנתונים המעודכנים ל-localStorage
             setReadingStatus(readingStatus);
-
+            
+            // --- הדפסות לוג כדי לעקוב אחר הנתונים ---
+            console.log(`Participant ${participantId} marked day ${currentDay} as read.`);
+            console.log('Current readingStatus:', readingStatus);
+            
+            // עדכן את כפתור הקריאה והתקדמות
             updateReadButton();
-            calculateAndShowProgress();
+            calculateAndShowProgress(); // חשוב מאוד לרענן את ההתקדמות לאחר סימון
+            
             alert('✅ סומן כקראת היום! ישר כוח!');
         }
 
@@ -420,6 +488,7 @@
                 showWhatsAppList();
                 showManualTrackingList();
                 calculateAndShowProgress();
+                updateDaySelectOptions(); // עדכון הסלקט לאחר שינוי יום
             } else {
                 alert('הגעת ליום האחרון של המחזור.');
             }
@@ -434,6 +503,7 @@
                 showWhatsAppList();
                 showManualTrackingList();
                 calculateAndShowProgress();
+                updateDaySelectOptions(); // עדכון הסלקט לאחר שינוי יום
             } else {
                 alert('אתה כבר ביום הראשון של המחזור.');
             }
@@ -467,6 +537,7 @@
                 showWhatsAppList();
                 showManualTrackingList();
                 calculateAndShowProgress();
+                updateDaySelectOptions(); // עדכון הסלקט לאחר איפוס
             }
         }
 
@@ -569,8 +640,11 @@
         function showProgressView() {
             const participantId = getCurrentParticipantId();
             if (participantId === null && !isAdmin()) {
-                alert('שגיאה: לא נמצא מזהה משתתף לצפייה בהתקדמות אישית. צפה בהתקדמות קבוצתית בלבד או היכנס כמשתתף.');
-                return;
+                // אם זה לא אדמין ואין מזהה משתתף - לא להציג התקדמות אישית
+                // אבל כן אפשר להציג את התקדמות קבוצתית
+                document.getElementById('personalProgressCircle').style.display = 'none';
+                document.getElementById('personalProgressText').textContent = 'התקדמות אישית זמינה למשתתפים מזוהים';
+                document.getElementById('personalProgressNumber').textContent = 'N/A';
             }
             
             document.getElementById('participantView').style.display = 'none';
@@ -649,6 +723,7 @@
                     }
                 }
             } else {
+                // אם אין ID משתתף, הסתר את התקדמות אישית או נקה אותה
                 const personalProgressCircle = document.getElementById('personalProgressCircle');
                 const personalProgressText = document.getElementById('personalProgressText');
                 const personalProgressNumber = document.getElementById('personalProgressNumber');
@@ -820,10 +895,11 @@
                 return;
             }
 
-            // תאריך לועזי
+            // --- שינוי כאן: קבלת תאריך לועזי ---
             const today = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const formattedDate = today.toLocaleDateString('he-IL', options); // he-IL כדי לקבל יום בשבוע בעברית
+            // --- סוף שינוי ---
 
             let html = '';
             participants.forEach(p => {
@@ -836,6 +912,7 @@
 
                 const appLink = `${baseUrl}?participant=${p.id}`; // הקישור היחיד
 
+                // --- שינוי כאן: מבנה הודעת הוואטסאפ ---
                 const whatsappMessage = 
 `שלום ${p.name}!
 
@@ -854,6 +931,7 @@ ${appLink}
 📱 אם הקישור לא עובד (פלאפון כשר) - פשוט שלח חזרה: "קראתי"
 
 תזכה למצוות`;
+                // --- סוף שינוי ---
 
 
                 const whatsappUrl = `https://wa.me/${p.phone}?text=${encodeURIComponent(whatsappMessage)}`;
@@ -876,6 +954,115 @@ ${appLink}
             });
             whatsappListDiv.innerHTML = html;
         }
+
+        // --- חדש: פונקציות לניהול היסטוריית קריאה ---
+        let currentEditedParticipantId = null; // ישמור את ה-ID של המשתתף שנערך כרגע
+
+        function showEditReadingDataPanel() {
+            const panel = document.getElementById('editReadingHistoryPanel');
+            const listContainer = document.getElementById('editHistoryParticipantsList');
+            
+            if (!panel || !listContainer) return;
+
+            panel.style.display = 'block';
+            document.getElementById('selectedParticipantHistory').style.display = 'none'; // הסתר פאנל ימים בהתחלה
+
+            if (participants.length === 0) {
+                listContainer.innerHTML = '<p class="text-muted text-center">אין משתתפים רשומים לעריכה.</p>';
+                return;
+            }
+
+            let html = '';
+            participants.forEach(p => {
+                html += `
+                    <div class="edit-history-participant-item">
+                        <strong>${p.name}</strong>
+                        <button class="btn btn-sm btn-info" onclick="loadParticipantReadingHistory(${p.id})">
+                            <i class="fas fa-calendar-check"></i> ערוך ימים
+                        </button>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        function loadParticipantReadingHistory(participantId) {
+            currentEditedParticipantId = participantId;
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) {
+                alert('שגיאה: משתתף לא נמצא.');
+                return;
+            }
+
+            document.getElementById('currentEditedParticipantName').textContent = participant.name;
+            const dayCheckboxesContainer = document.getElementById('dayCheckboxesContainer');
+            dayCheckboxesContainer.innerHTML = ''; // נקה קודם
+
+            const participantKey = `participant_${participantId}`;
+            const participantReadDays = readingStatus[participantKey] || {};
+
+            for (let i = 1; i <= TOTAL_DAYS; i++) {
+                const isChecked = participantReadDays[i] === true;
+                const div = document.createElement('div');
+                div.className = `day-checkbox-item ${isChecked ? 'checked' : ''}`;
+                div.innerHTML = `
+                    <label for="day_${participantId}_${i}">יום ${i}</label>
+                    <input type="checkbox" id="day_${participantId}_${i}" data-day="${i}" ${isChecked ? 'checked' : ''}>
+                `;
+                // הוספת event listener לסימון/ביטול סימון בלחיצה על ה-div כולו
+                div.addEventListener('click', (event) => {
+                    // מונע הדלקה/כיבוי כפולה אם לוחצים ישירות על הצ'קבוקס
+                    if (event.target.type !== 'checkbox') {
+                        const checkbox = div.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        div.classList.toggle('checked', checkbox.checked);
+                    }
+                });
+                dayCheckboxesContainer.appendChild(div);
+            }
+            document.getElementById('selectedParticipantHistory').style.display = 'block';
+        }
+
+        function saveParticipantHistory() {
+            if (currentEditedParticipantId === null) {
+                alert('שגיאה: לא נבחר משתתף לעריכה.');
+                return;
+            }
+
+            const participantKey = `participant_${currentEditedParticipantId}`;
+            const newReadStatusForParticipant = {};
+            const dayCheckboxes = document.querySelectorAll(`#dayCheckboxesContainer input[type="checkbox"]`);
+
+            dayCheckboxes.forEach(checkbox => {
+                const day = parseInt(checkbox.dataset.day, 10);
+                if (checkbox.checked) {
+                    newReadStatusForParticipant[day] = true;
+                }
+            });
+
+            readingStatus[participantKey] = newReadStatusForParticipant;
+            setReadingStatus(readingStatus);
+
+            alert('ימי הקריאה עודכנו בהצלחה!');
+            // רענן את כל התצוגות הרלוונטיות
+            calculateAndShowProgress();
+            showManualTrackingList();
+            showWhatsAppList(); // ייתכן וצריך לרענן גם אם יש בה סימוני קריאה
+            
+            // הסתר את פאנל עריכת הימים והצג שוב את רשימת המשתתפים לעריכה
+            document.getElementById('selectedParticipantHistory').style.display = 'none';
+            currentEditedParticipantId = null;
+            showEditReadingDataPanel(); // רענן את רשימת המשתתפים לעריכה
+        }
+
+        function hideEditReadingHistoryPanel() {
+            document.getElementById('editReadingHistoryPanel').style.display = 'none';
+            document.getElementById('selectedParticipantHistory').style.display = 'none';
+            currentEditedParticipantId = null;
+        }
+
+        // --- סוף חדש: פונקציות לניהול היסטוריית קריאה ---
+
 
         // ייצוא נתונים
         function exportData() {
@@ -960,8 +1147,16 @@ ${appLink}
         // אתחול האפליקציה
         function initializeApp() {
             currentDay = getCurrentDay();
-            participants = getParticipants();
-            readingStatus = getReadingStatus();
+            participants = getParticipants(); // טוען את רשימת המשתתפים
+            readingStatus = getReadingStatus(); // טוען את סטטוס הקריאה
+
+            // --- הוסף כאן בדיקה פשוטה ל-console ---
+            console.log('App Initialized:');
+            console.log('Current Day:', currentDay);
+            console.log('Participants loaded:', participants);
+            console.log('Reading Status loaded:', readingStatus);
+            console.log('Current Participant ID (if any):', getCurrentParticipantId());
+            // --- סוף בדיקה ---
 
             updateCurrentDayDisplay();
             
@@ -972,21 +1167,23 @@ ${appLink}
                 updateParticipantsList();
                 showWhatsAppList();
                 showManualTrackingList();
-                calculateAndShowProgress();
+                calculateAndShowProgress(); // הצג התקדמות באדמין פאנל
                 
+                // הסתר כפתורי משתמש רגיל באדמין
                 const markAsReadBtn = document.getElementById('markAsReadBtn');
                 if (markAsReadBtn) markAsReadBtn.style.display = 'none';
                 const viewProgressBtn = document.getElementById('viewProgressBtn');
                 if (viewProgressBtn) viewProgressBtn.style.display = 'none';
                 const completionMessage = document.getElementById('completionMessage');
                 if (completionMessage) completionMessage.style.display = 'none';
-                document.getElementById('progressView').style.display = 'none';
+                document.getElementById('progressView').style.display = 'none'; // הסתר תצוגת התקדמות כללית
             } else {
                 document.getElementById('adminView').style.display = 'none';
                 document.getElementById('participantView').style.display = 'block';
                 showTodayChapters();
-                updateReadButton();
+                updateReadButton(); // עדכן את הכפתור "קראתי" על בסיס הסטטוס הנוכחי
                 
+                // הצג תצוגת התקדמות אם הפרמטר קיים ב-URL
                 if (isProgressView()) {
                     showProgressView();
                 } else {
@@ -1029,6 +1226,31 @@ ${appLink}
         
         const addParticipantBtn = document.getElementById('addParticipantBtn');
         if (addParticipantBtn) addParticipantBtn.addEventListener('click', addParticipant);
+
+        // --- חדש: כפתורי עריכת היסטוריה (רק לאדמין) ---
+        const editReadingHistoryBtn = document.getElementById('editReadingHistoryBtn');
+        if (editReadingHistoryBtn) {
+            editReadingHistoryBtn.addEventListener('click', showEditReadingDataPanel);
+        }
+
+        const saveParticipantHistoryBtn = document.getElementById('saveParticipantHistoryBtn');
+        if (saveParticipantHistoryBtn) {
+            saveParticipantHistoryBtn.addEventListener('click', saveParticipantHistory);
+        }
+
+        const cancelParticipantHistoryBtn = document.getElementById('cancelParticipantHistoryBtn');
+        if (cancelParticipantHistoryBtn) {
+            cancelParticipantHistoryBtn.addEventListener('click', () => {
+                document.getElementById('selectedParticipantHistory').style.display = 'none';
+                currentEditedParticipantId = null;
+            });
+        }
+
+        const hideEditHistoryBtn = document.getElementById('hideEditHistoryBtn');
+        if (hideEditHistoryBtn) {
+            hideEditHistoryBtn.addEventListener('click', hideEditReadingHistoryPanel);
+        }
+        // --- סוף חדש ---
 
         // ייצוא נתונים (רק לאדמין)
         const exportDataBtn = document.getElementById('exportDataBtn');
